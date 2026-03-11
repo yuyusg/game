@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Tower Defense 40 Wave</title>
   <style>
     :root {
@@ -16,6 +16,10 @@
       --good: #7ad88f;
       --path: #8f7c53;
       --path-edge: #5f4f35;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
     }
 
     * {
@@ -31,13 +35,21 @@
         var(--bg);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
     }
 
     #app {
       width: 100%;
       max-width: none;
       margin: 0;
-      padding: 12px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding:
+        calc(12px + var(--safe-top))
+        calc(12px + var(--safe-right))
+        calc(12px + var(--safe-bottom))
+        calc(12px + var(--safe-left));
     }
 
     #hud {
@@ -613,8 +625,8 @@
 
     #towerPopup {
       position: absolute;
-      top: 70px;
-      right: 10px;
+      top: calc(70px + var(--safe-top));
+      right: calc(10px + var(--safe-right));
       width: min(280px, 78vw);
       z-index: 10;
       pointer-events: auto;
@@ -705,9 +717,9 @@
 
     #hotbarWrap {
       position: absolute;
-      left: 10px;
-      right: 10px;
-      bottom: 10px;
+      left: calc(10px + var(--safe-left));
+      right: calc(10px + var(--safe-right));
+      bottom: calc(10px + var(--safe-bottom));
       z-index: 9;
       pointer-events: auto;
     }
@@ -715,6 +727,7 @@
     #miniControlRow {
       margin-top: 6px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: flex-end;
       align-items: center;
       gap: 6px;
@@ -833,6 +846,8 @@
 
     body.inGame #app {
       padding: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
     }
 
     body.inGame #gameScreen {
@@ -853,15 +868,17 @@
     body.inGame #arenaViewport {
       height: 100%;
       min-height: 100vh;
+      min-height: 100svh;
+      min-height: 100dvh;
       border: 0;
       border-radius: 0;
     }
 
     body.inGame #hud {
       position: fixed;
-      top: 8px;
-      left: 8px;
-      right: 8px;
+      top: calc(8px + var(--safe-top));
+      left: calc(8px + var(--safe-left));
+      right: calc(8px + var(--safe-right));
       z-index: 30;
       margin: 0;
       pointer-events: none;
@@ -1039,8 +1056,8 @@
       }
 
       #towerPopup {
-        top: 94px;
-        right: 6px;
+        top: calc(94px + var(--safe-top));
+        right: calc(6px + var(--safe-right));
         width: min(230px, 84vw);
       }
 
@@ -1056,6 +1073,10 @@
         justify-content: space-between;
       }
 
+      #skipPrepBtn {
+        flex: 1 1 100%;
+      }
+
       #zoomValue {
         min-width: 38px;
       }
@@ -1065,9 +1086,9 @@
       }
 
       body.inGame #hud {
-        top: 6px;
-        left: 6px;
-        right: 6px;
+        top: calc(6px + var(--safe-top));
+        left: calc(6px + var(--safe-left));
+        right: calc(6px + var(--safe-right));
       }
 
       #hudSubline {
@@ -1146,7 +1167,7 @@
       <div id="playWrap">
         <div id="arenaViewport">
           <canvas id="gameCanvas" width="1000" height="560"></canvas>
-          <div id="panHint">Drag to move | Use +/- to zoom</div>
+          <div id="panHint">Drag or pinch | Use +/- to zoom</div>
           <div id="towerPopup" class="hidden">
             <h3>Tower Info</h3>
             <div id="towerInfo">
@@ -1273,6 +1294,12 @@
         startClientY: 0,
         startCameraX: 0,
         startCameraY: 0
+      };
+      const touchPointers = new Map();
+      const pinchState = {
+        active: false,
+        startDistance: 0,
+        startZoom: 1
       };
       let gameSpeedMultiplier = 1;
       let panHintTimeout = null;
@@ -3827,6 +3854,8 @@
         setActiveMap(selectedMapId);
         recordMapPlay(activeMap.id);
         state = createInitialState();
+        touchPointers.clear();
+        pinchState.active = false;
         state.mapId = selectedMapId;
         state.money = getStartMoneyForMapLevel(activeMap.level);
         state.phase = 'prep';
@@ -3857,6 +3886,8 @@
 
       function resetToSelection() {
         state = createInitialState();
+        touchPointers.clear();
+        pinchState.active = false;
         ui.resultOverlay.classList.add('hidden');
         ui.gameScreen.classList.add('hidden');
         ui.selectionScreen.classList.remove('hidden');
@@ -4415,6 +4446,72 @@
         requestAnimationFrame(gameLoop);
       }
 
+      function storeTouchPointer(event) {
+        if (event.pointerType !== 'touch') {
+          return;
+        }
+        touchPointers.set(event.pointerId, {
+          x: event.clientX,
+          y: event.clientY
+        });
+      }
+
+      function removeTouchPointer(event) {
+        if (event.pointerType !== 'touch') {
+          return;
+        }
+        touchPointers.delete(event.pointerId);
+      }
+
+      function getPinchSnapshot() {
+        if (touchPointers.size < 2) {
+          return null;
+        }
+        const points = Array.from(touchPointers.values());
+        const a = points[0];
+        const b = points[1];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        return {
+          distance: Math.hypot(dx, dy),
+          centerX: (a.x + b.x) * 0.5,
+          centerY: (a.y + b.y) * 0.5
+        };
+      }
+
+      function beginPinchZoom() {
+        const snapshot = getPinchSnapshot();
+        if (!snapshot) {
+          return;
+        }
+        pinchState.active = true;
+        pinchState.startDistance = Math.max(12, snapshot.distance);
+        pinchState.startZoom = cameraZoom;
+
+        if (dragState.active && dragState.pointerId != null && canvas.hasPointerCapture && canvas.hasPointerCapture(dragState.pointerId)) {
+          canvas.releasePointerCapture(dragState.pointerId);
+        }
+        dragState.active = false;
+        dragState.moved = false;
+        dragState.pointerId = null;
+        ui.arenaViewport.classList.remove('dragging');
+        state.hoverCell = null;
+      }
+
+      function updatePinchZoom() {
+        if (!pinchState.active) {
+          return false;
+        }
+        const snapshot = getPinchSnapshot();
+        if (!snapshot) {
+          return false;
+        }
+        const zoomRatio = snapshot.distance / Math.max(12, pinchState.startDistance);
+        const nextZoom = pinchState.startZoom * zoomRatio;
+        setCameraZoom(nextZoom, snapshot.centerX, snapshot.centerY);
+        return true;
+      }
+
       function beginCanvasDrag(event) {
         if (ui.gameScreen.classList.contains('hidden')) {
           return;
@@ -4481,12 +4578,43 @@
 
       canvas.addEventListener('pointerdown', (event) => {
         unlockAudio();
+        storeTouchPointer(event);
+        if (event.pointerType === 'touch' && touchPointers.size >= 2) {
+          beginPinchZoom();
+          if (event.cancelable) {
+            event.preventDefault();
+          }
+          return;
+        }
         beginCanvasDrag(event);
         handleCanvasPointer(event, false);
       });
-      canvas.addEventListener('pointermove', moveCanvasDrag);
-      canvas.addEventListener('pointerup', (event) => endCanvasDrag(event, true));
-      canvas.addEventListener('pointercancel', (event) => endCanvasDrag(event, false));
+      canvas.addEventListener('pointermove', (event) => {
+        storeTouchPointer(event);
+        if (pinchState.active) {
+          updatePinchZoom();
+          if (event.cancelable) {
+            event.preventDefault();
+          }
+          return;
+        }
+        moveCanvasDrag(event);
+      });
+      canvas.addEventListener('pointerup', (event) => {
+        const wasPinching = pinchState.active;
+        removeTouchPointer(event);
+        if (pinchState.active && touchPointers.size < 2) {
+          pinchState.active = false;
+        }
+        endCanvasDrag(event, !wasPinching);
+      });
+      canvas.addEventListener('pointercancel', (event) => {
+        removeTouchPointer(event);
+        if (touchPointers.size < 2) {
+          pinchState.active = false;
+        }
+        endCanvasDrag(event, false);
+      });
       canvas.addEventListener('pointerleave', () => {
         if (!dragState.active) {
           state.hoverCell = null;
