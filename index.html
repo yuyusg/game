@@ -24,7 +24,7 @@
 
     body {
       margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background:
         radial-gradient(circle at 10% 10%, #1f3829 0%, transparent 45%),
         radial-gradient(circle at 90% 80%, #1a2f24 0%, transparent 45%),
@@ -34,37 +34,110 @@
     }
 
     #app {
-      max-width: 1320px;
-      margin: 0 auto;
-      padding: 16px;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 12px;
     }
 
     #hud {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr));
-      gap: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       margin-bottom: 14px;
     }
 
-    .hudCard {
+    #hudStrip {
+      display: grid;
+      grid-template-columns: minmax(120px, 160px) minmax(220px, 1fr) minmax(120px, 160px);
+      align-items: center;
+      gap: 8px;
       background: linear-gradient(160deg, var(--panel), var(--panel-2));
       border: 1px solid #2e4f3b;
       border-radius: 10px;
-      padding: 10px 12px;
-      min-height: 66px;
+      padding: 8px 10px;
     }
 
-    .hudLabel {
-      font-size: 0.76rem;
+    .hudSide {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-weight: 700;
+    }
+
+    .hudSide .label {
+      font-size: 0.66rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       opacity: 0.8;
-      margin-bottom: 4px;
     }
 
-    .hudValue {
+    .hudSide .value {
       font-weight: 700;
-      font-size: 1.16rem;
+      font-size: 1rem;
+      line-height: 1.15;
+    }
+
+    .hudSide.right {
+      text-align: right;
+    }
+
+    #hudCenter {
+      min-width: 0;
+    }
+
+    #baseHpLabel {
+      text-align: center;
+      font-size: 0.72rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    #baseHpBar {
+      position: relative;
+      height: 12px;
+      border-radius: 999px;
+      border: 1px solid #56755f;
+      background: rgba(9, 18, 13, 0.55);
+      overflow: hidden;
+    }
+
+    #baseHpFill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 100%;
+      background: linear-gradient(90deg, #e27a68 0%, #f2b165 55%, #89d48f 100%);
+      border-radius: inherit;
+      transition: width 0.14s linear;
+    }
+
+    #hudSubline {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.74rem;
+      background: rgba(13, 24, 18, 0.52);
+      border: 1px solid #304c3b;
+      border-radius: 8px;
+      padding: 6px 9px;
+    }
+
+    #towerLimitNote {
+      opacity: 0.86;
+      white-space: nowrap;
+    }
+
+    #statusValue {
+      text-align: right;
+      font-weight: 600;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     #selectionScreen,
@@ -76,73 +149,116 @@
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
     }
 
+    #selectionScreen {
+      position: relative;
+      overflow: hidden;
+      border-color: #456353;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(78, 143, 116, 0.2), transparent 45%),
+        radial-gradient(circle at 84% 18%, rgba(253, 210, 113, 0.14), transparent 34%),
+        linear-gradient(165deg, rgba(16, 32, 24, 0.98), rgba(13, 24, 19, 0.99));
+    }
+
+    #selectionScreen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.035) 0%, transparent 34%),
+        repeating-linear-gradient(
+          -24deg,
+          rgba(170, 210, 188, 0.03) 0 8px,
+          rgba(15, 24, 20, 0.02) 8px 16px
+        );
+      opacity: 0.7;
+    }
+
     #selectionHeader {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+      border: 1px solid #395543;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: linear-gradient(170deg, rgba(25, 47, 36, 0.82), rgba(17, 31, 24, 0.8));
     }
 
     #selectionHeader h2 {
       margin: 0;
-      font-size: 1.3rem;
+      font-size: 1.45rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      text-shadow: 0 3px 16px rgba(0, 0, 0, 0.36);
     }
 
     #selectionHint {
       margin: 0;
-      opacity: 0.86;
-      font-size: 0.9rem;
+      opacity: 0.9;
+      font-size: 0.82rem;
+      letter-spacing: 0.02em;
     }
 
     #mapSection {
       margin-bottom: 14px;
-      border: 1px solid #355441;
+      border: 1px solid #395845;
       border-radius: 12px;
-      padding: 10px;
-      background: linear-gradient(160deg, rgba(31, 52, 40, 0.75), rgba(22, 36, 29, 0.78));
+      padding: 12px;
+      background: linear-gradient(160deg, rgba(32, 54, 42, 0.8), rgba(20, 34, 27, 0.84));
+      position: relative;
+      z-index: 1;
     }
 
     #mapSection h3 {
-      margin: 0 0 4px;
-      font-size: 1rem;
+      margin: 0 0 5px;
+      font-size: 1.02rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #f6dc9a;
     }
 
     #mapGrid {
-      margin-top: 8px;
+      margin-top: 10px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 8px;
+      gap: 10px;
     }
 
     .mapCard {
-      border: 1px solid #3a604b;
-      background: linear-gradient(160deg, #1e3328, #17261d);
-      border-radius: 10px;
+      border: 1px solid #3f644f;
+      background: linear-gradient(162deg, #213a2d, #16281f);
+      border-radius: 12px;
       color: var(--text);
-      padding: 10px;
+      padding: 11px;
       text-align: left;
       cursor: pointer;
-      min-height: 98px;
-      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      min-height: 104px;
+      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 20px rgba(0, 0, 0, 0.18);
     }
 
     .mapCard:hover {
-      transform: translateY(-1px);
-      border-color: #64a381;
+      transform: translateY(-2px);
+      border-color: #71b28d;
+      filter: brightness(1.03);
     }
 
     .mapCard.selected {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(245, 195, 85, 0.3) inset;
-      background: linear-gradient(165deg, #3b2f1e, #2b2417);
+      border-color: #e7c477;
+      box-shadow: 0 0 0 1px rgba(245, 195, 85, 0.42) inset, 0 10px 24px rgba(60, 45, 17, 0.36);
+      background: linear-gradient(165deg, #40321e, #2b2417);
     }
 
     .mapCard strong {
       display: block;
-      margin-bottom: 4px;
-      font-size: 0.92rem;
+      margin-bottom: 5px;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
     }
 
     .mapCard .meta {
@@ -166,34 +282,56 @@
       max-height: 63vh;
       overflow: auto;
       padding-right: 2px;
+      position: relative;
+      z-index: 1;
+    }
+
+    #characterGrid::-webkit-scrollbar,
+    #shopBar::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+
+    #characterGrid::-webkit-scrollbar-thumb,
+    #shopBar::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #587862, #3d5948);
+      border-radius: 999px;
+    }
+
+    #characterGrid::-webkit-scrollbar-track,
+    #shopBar::-webkit-scrollbar-track {
+      background: rgba(8, 15, 12, 0.45);
+      border-radius: 999px;
     }
 
     .charCard {
-      border: 1px solid #31533f;
-      background: linear-gradient(160deg, #1b3025, #16251d);
-      border-radius: 10px;
+      border: 1px solid #365944;
+      background: linear-gradient(160deg, #1f3529, #17291f);
+      border-radius: 12px;
       color: var(--text);
-      padding: 10px;
+      padding: 11px;
       text-align: left;
       cursor: pointer;
-      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 18px rgba(0, 0, 0, 0.16);
     }
 
     .charCard:hover {
-      transform: translateY(-1px);
-      border-color: #5f926f;
-      background: linear-gradient(160deg, #20382c, #182920);
+      transform: translateY(-2px);
+      border-color: #79b694;
+      background: linear-gradient(160deg, #253f31, #1a2e23);
     }
 
     .charCard.selected {
-      border-color: var(--accent);
-      background: linear-gradient(160deg, #3a311f, #262111);
-      box-shadow: 0 0 0 1px rgba(245, 195, 85, 0.3) inset;
+      border-color: #f0cc7c;
+      background: linear-gradient(160deg, #423421, #2b2314);
+      box-shadow: 0 0 0 1px rgba(245, 195, 85, 0.38) inset, 0 9px 20px rgba(61, 43, 15, 0.3);
     }
 
     .charCard.locked {
-      opacity: 0.5;
+      opacity: 0.56;
       cursor: not-allowed;
+      filter: grayscale(0.18);
     }
 
     .charTop {
@@ -233,16 +371,25 @@
     }
 
     #selectionFooter {
-      margin-top: 12px;
+      margin-top: 14px;
       display: flex;
       justify-content: space-between;
       gap: 12px;
       align-items: center;
       flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+      border: 1px solid #395543;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: linear-gradient(170deg, rgba(25, 44, 34, 0.88), rgba(14, 27, 21, 0.9));
     }
 
     #selectedCount {
-      font-size: 0.92rem;
+      font-size: 0.84rem;
+      letter-spacing: 0.04em;
+      opacity: 0.93;
+      font-weight: 700;
     }
 
     .btn {
@@ -268,71 +415,208 @@
     .btn.primary {
       border-color: #9d8141;
       background: linear-gradient(180deg, #6f5827, #57441d);
+      box-shadow: 0 8px 22px rgba(92, 70, 24, 0.33);
+    }
+
+    #clearSelectionBtn {
+      border-color: #4e725e;
+      background: linear-gradient(180deg, #355744, #284536);
+      font-size: 0.8rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    #startGameBtn {
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      min-width: 180px;
     }
 
     #playWrap {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 280px;
-      gap: 12px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
       align-items: start;
+    }
+
+    #arenaViewport {
+      position: relative;
+      width: 100%;
+      height: min(80vh, calc(100vh - 220px));
+      min-height: 320px;
+      border: 1px solid #41614e;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #1a2d22;
+      cursor: grab;
+    }
+
+    #arenaViewport.dragging {
+      cursor: grabbing;
     }
 
     #gameCanvas {
       width: 100%;
-      height: auto;
-      border: 1px solid #41614e;
-      border-radius: 10px;
+      height: 100%;
+      border: 0;
       background: #1a2d22;
       display: block;
+      touch-action: none;
     }
 
-    #sidePanel {
+    #panHint {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.96);
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(10, 21, 15, 0.82);
+      border: 1px solid rgba(124, 196, 157, 0.55);
+      color: #dcf8e8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      pointer-events: none;
+      user-select: none;
+      opacity: 0;
+      z-index: 12;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.34);
+    }
+
+    #panHint.show {
+      animation: panHintPulse 1s ease forwards;
+    }
+
+    @keyframes panHintPulse {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -52%) scale(0.95);
+      }
+      18% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      60% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -49%) scale(1.03);
+      }
+    }
+
+    #towerPopup {
+      position: absolute;
+      top: 70px;
+      right: 10px;
+      width: min(280px, 78vw);
+      z-index: 10;
+      pointer-events: auto;
       background: linear-gradient(170deg, #203428, #1a2a21);
       border: 1px solid #355440;
       border-radius: 10px;
-      padding: 12px;
-      min-height: 560px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      padding: 8px;
     }
 
-    #sidePanel h3 {
-      margin: 0;
-      font-size: 1rem;
+    #towerPopup h3 {
+      margin: 0 0 6px;
+      font-size: 0.86rem;
+    }
+
+    #towerPopupButtons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    #towerPopupButtons .btn {
+      padding: 7px 6px;
+      font-size: 0.72rem;
     }
 
     #towerInfo {
       background: rgba(10, 20, 15, 0.45);
       border: 1px solid #35513f;
       border-radius: 8px;
-      padding: 10px;
-      min-height: 180px;
-      font-size: 0.86rem;
-      line-height: 1.45;
+      padding: 7px;
+      min-height: 72px;
+      max-height: 110px;
+      overflow: auto;
+      font-size: 0.7rem;
+      line-height: 1.3;
     }
 
     #towerInfo .muted {
       opacity: 0.78;
-      font-size: 0.83rem;
+      font-size: 0.68rem;
+    }
+
+    #speedControls {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .speedBtn {
+      padding: 5px 8px;
+      font-size: 0.72rem;
+      min-width: 38px;
+    }
+
+    .speedBtn.active {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #5d4a23, #4b3b1a);
+      color: #fff0ce;
+    }
+
+    #hotbarWrap {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      z-index: 9;
+      pointer-events: auto;
+    }
+
+    #miniControlRow {
+      margin-top: 6px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #skipPrepBtn {
+      padding: 6px 9px;
+      font-size: 0.72rem;
+      min-width: 118px;
     }
 
     #shopBar {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 10px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 2px 2px 6px;
+      scroll-behavior: smooth;
+      touch-action: pan-x;
     }
 
     .shopItem {
       border: 1px solid #486a56;
       border-radius: 10px;
-      padding: 10px;
+      padding: 8px;
       background: linear-gradient(160deg, #223629, #1a2a20);
       color: var(--text);
       text-align: left;
       cursor: pointer;
-      min-height: 88px;
+      min-height: 78px;
+      flex: 0 0 168px;
     }
 
     .shopItem:hover {
@@ -351,20 +635,20 @@
 
     .shopItem strong {
       display: block;
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       margin-bottom: 3px;
     }
 
     .shopItem .cost {
       color: var(--accent);
       font-weight: 700;
-      font-size: 0.88rem;
+      font-size: 0.8rem;
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .shopItem .mini {
-      font-size: 0.73rem;
+      font-size: 0.67rem;
       opacity: 0.86;
       display: block;
     }
@@ -410,23 +694,146 @@
       display: none !important;
     }
 
+    body.inGame {
+      overflow: hidden;
+    }
+
+    body.inGame #app {
+      padding: 0;
+    }
+
+    body.inGame #gameScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+      background: transparent;
+    }
+
+    body.inGame #playWrap {
+      height: 100%;
+    }
+
+    body.inGame #arenaViewport {
+      height: 100%;
+      min-height: 100vh;
+      border: 0;
+      border-radius: 0;
+    }
+
+    body.inGame #hud {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      z-index: 30;
+      margin: 0;
+      pointer-events: none;
+    }
+
+    body.inGame #hudStrip,
+    body.inGame #hudSubline {
+      backdrop-filter: blur(3px);
+      background: linear-gradient(165deg, rgba(14, 29, 21, 0.84), rgba(16, 32, 23, 0.86));
+    }
+
+    body.inGame #hudStrip {
+      padding: 7px 8px;
+    }
+
+    body.inGame #hudSubline {
+      padding: 5px 8px;
+    }
+
+    body.inGame .hudSide .label,
+    body.inGame #baseHpLabel {
+      font-size: 0.62rem;
+    }
+
+    body.inGame .hudSide .value {
+      font-size: 0.9rem;
+    }
+
+    body.inGame #statusValue {
+      font-size: 0.7rem;
+    }
+
     @media (max-width: 1040px) {
-      #playWrap {
-        grid-template-columns: 1fr;
+      #arenaViewport {
+        height: min(74vh, calc(100vh - 220px));
       }
 
-      #sidePanel {
-        min-height: unset;
+      #towerPopup {
+        width: min(260px, calc(100vw - 20px));
       }
     }
 
     @media (max-width: 680px) {
-      #hud {
-        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      #hudStrip {
+        grid-template-columns: minmax(90px, 116px) minmax(0, 1fr) minmax(90px, 116px);
       }
 
       #characterGrid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+
+      #selectionHeader h2 {
+        font-size: 1.16rem;
+      }
+
+      #selectionHint {
+        font-size: 0.76rem;
+      }
+
+      #startGameBtn {
+        width: 100%;
+        min-width: 0;
+      }
+
+      #arenaViewport {
+        height: min(72vh, calc(100vh - 240px));
+        min-height: 290px;
+      }
+
+      #towerPopup {
+        top: 94px;
+        right: 6px;
+        width: min(230px, 84vw);
+      }
+
+      #towerPopupButtons {
+        grid-template-columns: 1fr;
+      }
+
+      #towerInfo {
+        max-height: 84px;
+      }
+
+      #miniControlRow {
+        justify-content: space-between;
+      }
+
+      .shopItem {
+        flex: 0 0 148px;
+      }
+
+      body.inGame #hud {
+        top: 6px;
+        left: 6px;
+        right: 6px;
+      }
+
+      #hudSubline {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      #statusValue {
+        text-align: left;
+        width: 100%;
       }
     }
   </style>
@@ -434,29 +841,33 @@
 <body>
   <div id="app">
     <header id="hud">
-      <div class="hudCard">
-        <div class="hudLabel">Wave</div>
-        <div class="hudValue" id="waveValue">0/40</div>
+      <div id="hudStrip">
+        <div class="hudSide">
+          <span class="label">Wave</span>
+          <span class="value" id="waveValue">0/40</span>
+        </div>
+        <div id="hudCenter">
+          <div id="baseHpLabel">Base HP <span id="baseHpValue">30</span></div>
+          <div id="baseHpBar">
+            <div id="baseHpFill"></div>
+          </div>
+        </div>
+        <div class="hudSide right">
+          <span class="label">Money</span>
+          <span class="value" id="moneyValue">$100</span>
+        </div>
       </div>
-      <div class="hudCard">
-        <div class="hudLabel">Money</div>
-        <div class="hudValue" id="moneyValue">$100</div>
-      </div>
-      <div class="hudCard">
-        <div class="hudLabel">Base HP</div>
-        <div class="hudValue" id="baseHpValue">30</div>
-      </div>
-      <div class="hudCard">
-        <div class="hudLabel">Status</div>
-        <div class="hudValue" id="statusValue">Select a map + 5 characters</div>
+      <div id="hudSubline">
+        <span id="towerLimitNote">Defender Limit Total: 30</span>
+        <span id="statusValue">Select a map + 5 characters</span>
       </div>
     </header>
 
     <section id="selectionScreen">
       <div id="selectionHeader">
         <div>
-          <h2>Select 5 Defenders from 20 Characters</h2>
-          <p id="selectionHint">Pick 1 map + 5 defenders. Only selected defenders will appear in the shop.</p>
+          <h2>Tower Defense Simulator Loadout</h2>
+          <p id="selectionHint">Pick 1 map and 1-5 defenders, then deploy your squad.</p>
         </div>
         <button id="clearSelectionBtn" class="btn">Reset Selection</button>
       </div>
@@ -467,26 +878,39 @@
       </div>
       <div id="characterGrid"></div>
       <div id="selectionFooter">
-        <div id="selectedCount">Selected: 0 / 5</div>
+        <div id="selectedCount">Selected: 0 (min 1, max 5)</div>
         <button id="startGameBtn" class="btn primary" disabled>Start Defense</button>
       </div>
     </section>
 
     <section id="gameScreen" class="hidden">
       <div id="playWrap">
-        <canvas id="gameCanvas" width="1000" height="560"></canvas>
-        <aside id="sidePanel">
-          <h3>Tower Info</h3>
-          <div id="towerInfo">
-            <div class="muted">Click a placed tower to view stats and upgrades.</div>
+        <div id="arenaViewport">
+          <canvas id="gameCanvas" width="1000" height="560"></canvas>
+          <div id="panHint">Arena can be dragged</div>
+          <div id="towerPopup" class="hidden">
+            <h3>Tower Info</h3>
+            <div id="towerInfo">
+              <div class="muted">Click a placed tower to view stats and upgrades.</div>
+            </div>
+            <div id="towerPopupButtons">
+              <button id="upgradeBtn" class="btn" disabled>Select Tower</button>
+              <button id="sellBtn" class="btn" disabled>Sell Tower</button>
+            </div>
           </div>
-          <button id="upgradeBtn" class="btn" disabled>Select Tower</button>
-          <button id="sellBtn" class="btn" disabled>Sell Tower</button>
-          <button id="skipPrepBtn" class="btn">Start Wave Now</button>
-          <p class="hint">Click a tower card below to enter placement mode, then click a green grid cell on the map.</p>
-        </aside>
+          <div id="hotbarWrap">
+            <div id="shopBar"></div>
+            <div id="miniControlRow">
+              <button id="skipPrepBtn" class="btn">Start Wave</button>
+              <div id="speedControls">
+                <button type="button" class="btn speedBtn active" data-speed="1">1x</button>
+                <button type="button" class="btn speedBtn" data-speed="2">2x</button>
+                <button type="button" class="btn speedBtn" data-speed="3">3x</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div id="shopBar"></div>
     </section>
   </div>
 
@@ -505,6 +929,10 @@
       const START_BASE_HP = 30;
       const GRID_SIZE = 40;
       const PATH_WIDTH = 56;
+      const WORLD_WIDTH = 1320;
+      const WORLD_HEIGHT = 820;
+      const MAP_OFFSET_X = 160;
+      const MAP_OFFSET_Y = 130;
       const MAX_TOTAL_TOWERS = 30;
       const BASE_HIT_SHAKE_MS = 420;
       const BASE_HIT_FLASH_MS = 460;
@@ -512,13 +940,15 @@
 
       const canvas = document.getElementById('gameCanvas');
       const ctx = canvas.getContext('2d');
-      const cols = Math.floor(canvas.width / GRID_SIZE);
-      const rows = Math.floor(canvas.height / GRID_SIZE);
+      const cols = Math.floor(WORLD_WIDTH / GRID_SIZE);
+      const rows = Math.floor(WORLD_HEIGHT / GRID_SIZE);
 
       const ui = {
         waveValue: document.getElementById('waveValue'),
         moneyValue: document.getElementById('moneyValue'),
         baseHpValue: document.getElementById('baseHpValue'),
+        baseHpFill: document.getElementById('baseHpFill'),
+        towerLimitNote: document.getElementById('towerLimitNote'),
         statusValue: document.getElementById('statusValue'),
         selectionScreen: document.getElementById('selectionScreen'),
         gameScreen: document.getElementById('gameScreen'),
@@ -528,10 +958,14 @@
         startGameBtn: document.getElementById('startGameBtn'),
         clearSelectionBtn: document.getElementById('clearSelectionBtn'),
         shopBar: document.getElementById('shopBar'),
+        arenaViewport: document.getElementById('arenaViewport'),
+        panHint: document.getElementById('panHint'),
+        towerPopup: document.getElementById('towerPopup'),
         towerInfo: document.getElementById('towerInfo'),
         upgradeBtn: document.getElementById('upgradeBtn'),
         sellBtn: document.getElementById('sellBtn'),
         skipPrepBtn: document.getElementById('skipPrepBtn'),
+        speedButtons: Array.from(document.querySelectorAll('.speedBtn')),
         resultOverlay: document.getElementById('resultOverlay'),
         resultTitle: document.getElementById('resultTitle'),
         resultText: document.getElementById('resultText'),
@@ -550,6 +984,18 @@
         unlocked: false
       };
       const SFX_VOLUME_BOOST = 3.2;
+      const camera = { x: 0, y: 0 };
+      const dragState = {
+        active: false,
+        moved: false,
+        pointerId: null,
+        startClientX: 0,
+        startClientY: 0,
+        startCameraX: 0,
+        startCameraY: 0
+      };
+      let gameSpeedMultiplier = 1;
+      let panHintTimeout = null;
 
       function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
@@ -1143,7 +1589,10 @@
       const mapById = new Map(MAP_CATALOG.map((map) => [map.id, map]));
       let selectedMapId = MAP_CATALOG[0].id;
       let activeMap = MAP_CATALOG[0];
-      let pathWaypoints = activeMap.path;
+      let pathWaypoints = activeMap.path.map((point) => ({
+        x: point.x + MAP_OFFSET_X,
+        y: point.y + MAP_OFFSET_Y
+      }));
       let basePoint = pathWaypoints[pathWaypoints.length - 1];
       let mapPathLength = 0;
 
@@ -1196,13 +1645,94 @@
         };
       }
 
+      function getShiftedPath(path) {
+        return path.map((point) => ({
+          x: point.x + MAP_OFFSET_X,
+          y: point.y + MAP_OFFSET_Y
+        }));
+      }
+
       function setActiveMap(mapId) {
         const map = mapById.get(mapId) || MAP_CATALOG[0];
         selectedMapId = map.id;
         activeMap = map;
-        pathWaypoints = activeMap.path;
+        pathWaypoints = getShiftedPath(activeMap.path);
         basePoint = pathWaypoints[pathWaypoints.length - 1];
         mapPathLength = getPathTotalLength(pathWaypoints);
+      }
+
+      function getCameraBoundsX() {
+        if (WORLD_WIDTH <= canvas.width) {
+          const centeredX = (WORLD_WIDTH - canvas.width) / 2;
+          return { min: centeredX, max: centeredX };
+        }
+        return { min: 0, max: WORLD_WIDTH - canvas.width };
+      }
+
+      function getCameraBoundsY() {
+        if (WORLD_HEIGHT <= canvas.height) {
+          const centeredY = (WORLD_HEIGHT - canvas.height) / 2;
+          return { min: centeredY, max: centeredY };
+        }
+        return { min: 0, max: WORLD_HEIGHT - canvas.height };
+      }
+
+      function clampCameraToWorld() {
+        const xBounds = getCameraBoundsX();
+        const yBounds = getCameraBoundsY();
+        camera.x = clamp(camera.x, xBounds.min, xBounds.max);
+        camera.y = clamp(camera.y, yBounds.min, yBounds.max);
+      }
+
+      function getPathBounds(points) {
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        for (let i = 0; i < points.length; i += 1) {
+          const point = points[i];
+          minX = Math.min(minX, point.x);
+          maxX = Math.max(maxX, point.x);
+          minY = Math.min(minY, point.y);
+          maxY = Math.max(maxY, point.y);
+        }
+        return { minX, maxX, minY, maxY };
+      }
+
+      function focusCameraOnPath() {
+        const bounds = getPathBounds(pathWaypoints);
+        camera.x = ((bounds.minX + bounds.maxX) / 2) - canvas.width / 2;
+        camera.y = ((bounds.minY + bounds.maxY) / 2) - canvas.height / 2;
+        clampCameraToWorld();
+      }
+
+      function resizeArenaCanvas() {
+        if (!ui.arenaViewport || ui.gameScreen.classList.contains('hidden')) {
+          return;
+        }
+        const rect = ui.arenaViewport.getBoundingClientRect();
+        const width = Math.max(320, Math.floor(rect.width));
+        const height = Math.max(260, Math.floor(rect.height));
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+        clampCameraToWorld();
+      }
+
+      function getWorldPointFromClient(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) {
+          return null;
+        }
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const viewX = (clientX - rect.left) * scaleX;
+        const viewY = (clientY - rect.top) * scaleY;
+        return {
+          x: viewX + camera.x,
+          y: viewY + camera.y
+        };
       }
 
       const ZOMBIE_TYPES = {
@@ -1522,8 +2052,11 @@
           spawnQueue: [],
           spawnTimer: 0,
           prepTimer: 0,
+          waveSpawnTotal: 0,
+          waveSpawned: 0,
           hoverCell: null,
           kills: 0,
+          gameSpeed: gameSpeedMultiplier,
           baseHitShakeTimer: 0,
           baseHitShakePower: 0,
           baseHitFlashTimer: 0,
@@ -1543,6 +2076,48 @@
       function showNotice(message) {
         state.notice = message;
         state.noticeTimer = 1600;
+      }
+
+      function setGameSpeed(multiplier) {
+        const speed = Math.round(clamp(multiplier, 1, 3));
+        gameSpeedMultiplier = speed;
+        state.gameSpeed = speed;
+        renderSpeedButtons();
+      }
+
+      function renderSpeedButtons() {
+        for (let i = 0; i < ui.speedButtons.length; i += 1) {
+          const button = ui.speedButtons[i];
+          const speed = Number(button.dataset.speed || '1');
+          button.classList.toggle('active', speed === gameSpeedMultiplier);
+        }
+      }
+
+      function showPanHintPopup() {
+        if (!ui.panHint) {
+          return;
+        }
+        ui.panHint.classList.remove('show');
+        void ui.panHint.offsetWidth;
+        ui.panHint.classList.add('show');
+        if (panHintTimeout) {
+          clearTimeout(panHintTimeout);
+        }
+        panHintTimeout = setTimeout(() => {
+          ui.panHint.classList.remove('show');
+        }, 1020);
+      }
+
+      function canSkipCurrentWave() {
+        if (state.phase !== 'wave' || state.wave >= state.totalWaves) {
+          return false;
+        }
+        if (state.waveSpawnTotal <= 0) {
+          return false;
+        }
+        const remaining = state.spawnQueue.length + state.zombies.length;
+        const cleared = Math.max(0, state.waveSpawnTotal - remaining);
+        return cleared >= Math.ceil(state.waveSpawnTotal * 0.5);
       }
 
       function triggerBaseHitEffects(baseDamage) {
@@ -2477,6 +3052,8 @@
         state.wave += 1;
         state.phase = 'wave';
         state.spawnQueue = generateWaveQueue(state.wave);
+        state.waveSpawnTotal = state.spawnQueue.length;
+        state.waveSpawned = 0;
         state.spawnTimer = 420;
         state.status = 'Wave ' + state.wave + ' started';
       }
@@ -2484,6 +3061,8 @@
       function finishCurrentWave() {
         const clearBonus = getWaveCompletionBonus(state.wave);
         addMoney(clearBonus);
+        state.waveSpawnTotal = 0;
+        state.waveSpawned = 0;
 
         if (state.wave >= state.totalWaves) {
           state.phase = 'victory';
@@ -2520,9 +3099,12 @@
       }
 
       function updateHud() {
-       ui.waveValue.textContent = state.wave + '/' + state.totalWaves;
+        ui.waveValue.textContent = state.wave + '/' + state.totalWaves;
         ui.moneyValue.textContent = '$' + Math.floor(state.money);
-        ui.baseHpValue.textContent = Math.max(0, Math.ceil(state.baseHp));
+        const hpValue = Math.max(0, state.baseHp);
+        ui.baseHpValue.textContent = Math.ceil(hpValue);
+        const hpRatio = clamp(hpValue / START_BASE_HP, 0, 1);
+        ui.baseHpFill.style.width = (hpRatio * 100).toFixed(1) + '%';
 
         let status = state.status;
 
@@ -2539,12 +3121,33 @@
         }
 
         ui.statusValue.textContent = status;
-        ui.skipPrepBtn.disabled = state.phase !== 'prep';
+        if (state.phase === 'prep') {
+          ui.skipPrepBtn.disabled = false;
+          ui.skipPrepBtn.textContent = 'Start Wave';
+          return;
+        }
+
+        if (canSkipCurrentWave()) {
+          ui.skipPrepBtn.disabled = false;
+          ui.skipPrepBtn.textContent = 'Skip > ' + (state.wave + 1);
+          return;
+        }
+
+        ui.skipPrepBtn.disabled = true;
+        if (state.phase === 'wave' && state.wave < state.totalWaves && state.waveSpawnTotal > 0) {
+          const remainingEnemies = state.spawnQueue.length + state.zombies.length;
+          const cleared = Math.max(0, state.waveSpawnTotal - remainingEnemies);
+          const needed = Math.max(0, Math.ceil(state.waveSpawnTotal * 0.5) - cleared);
+          ui.skipPrepBtn.textContent = 'Skip in ' + needed;
+          return;
+        }
+        ui.skipPrepBtn.textContent = 'Start Wave';
       }
 
       function renderTowerInfo() {
         const tower = getSelectedTower();
         if (!tower) {
+          ui.towerPopup.classList.add('hidden');
           ui.towerInfo.innerHTML = '<div class="muted">Click a placed tower to view stats and upgrades.</div>';
           ui.upgradeBtn.disabled = true;
           ui.upgradeBtn.textContent = 'Select Tower';
@@ -2553,6 +3156,7 @@
           return;
         }
 
+        ui.towerPopup.classList.remove('hidden');
         const nextCost = tower.level < 3 ? tower.upgradeCosts[tower.level] : null;
         const sellValue = Math.floor(tower.def.cost * 0.5);
         ui.towerInfo.innerHTML = [
@@ -2644,8 +3248,8 @@
         const map = mapById.get(selectedMapId);
         const mapLabel = map ? map.name + ' [' + map.difficulty + ']' : 'No map selected';
         const startMoney = map ? getStartMoneyForMapLevel(map.level) : START_MONEY;
-        ui.selectedCount.textContent = 'Selected: ' + selectedPool.size + ' / 5 | Map: ' + mapLabel + ' | Start $' + startMoney;
-        ui.startGameBtn.disabled = selectedPool.size !== 5 || !map;
+        ui.selectedCount.textContent = 'Selected: ' + selectedPool.size + ' (min 1, max 5) | Map: ' + mapLabel + ' | Start $' + startMoney;
+        ui.startGameBtn.disabled = selectedPool.size < 1 || selectedPool.size > 5 || !map;
       }
 
       function renderMapSelection() {
@@ -2717,7 +3321,7 @@
       }
 
       function beginGame() {
-        if (selectedPool.size !== 5 || !selectedMapId) {
+        if (selectedPool.size < 1 || selectedPool.size > 5 || !selectedMapId) {
           return;
         }
 
@@ -2729,6 +3333,7 @@
         state.prepTimer = 7000;
         state.status = activeMap.name + ' | Preparing wave 1';
         state.selectedTowerIds = Array.from(selectedPool);
+        state.gameSpeed = gameSpeedMultiplier;
 
         nextTowerId = 1;
         nextZombieId = 1;
@@ -2736,9 +3341,16 @@
         ui.selectionScreen.classList.add('hidden');
         ui.gameScreen.classList.remove('hidden');
         ui.resultOverlay.classList.add('hidden');
+        document.body.classList.add('inGame');
+        resizeArenaCanvas();
+        focusCameraOnPath();
+        ui.arenaViewport.classList.remove('dragging');
+        ui.towerPopup.classList.add('hidden');
+        showPanHintPopup();
 
         state.shopDirty = true;
         state.towerInfoDirty = true;
+        renderSpeedButtons();
       }
 
       function resetToSelection() {
@@ -2746,6 +3358,14 @@
         ui.resultOverlay.classList.add('hidden');
         ui.gameScreen.classList.add('hidden');
         ui.selectionScreen.classList.remove('hidden');
+        document.body.classList.remove('inGame');
+        ui.arenaViewport.classList.remove('dragging');
+        if (panHintTimeout) {
+          clearTimeout(panHintTimeout);
+          panHintTimeout = null;
+        }
+        ui.panHint.classList.remove('show');
+        ui.towerPopup.classList.add('hidden');
         setActiveMap(selectedMapId);
         renderMapSelection();
         renderCharacterSelection();
@@ -2756,11 +3376,12 @@
           return;
         }
 
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const x = (event.clientX - rect.left) * scaleX;
-        const y = (event.clientY - rect.top) * scaleY;
+        const point = getWorldPointFromClient(event.clientX, event.clientY);
+        if (!point) {
+          return;
+        }
+        const x = point.x;
+        const y = point.y;
         const gx = Math.floor(x / GRID_SIZE);
         const gy = Math.floor(y / GRID_SIZE);
 
@@ -2809,16 +3430,16 @@
 
       function drawBackground() {
         const palette = activeMap.palette;
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        const gradient = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
         gradient.addColorStop(0, palette.bgTop);
         gradient.addColorStop(1, palette.bgBottom);
         ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
         ctx.fillStyle = palette.speckle;
         for (let i = 0; i < 40; i += 1) {
-          const x = (i * 137) % canvas.width;
-          const y = (i * 211) % canvas.height;
+          const x = (i * 137) % WORLD_WIDTH;
+          const y = (i * 211) % WORLD_HEIGHT;
           ctx.beginPath();
           ctx.arc(x, y, 1.2, 0, Math.PI * 2);
           ctx.fill();
@@ -2828,17 +3449,17 @@
       function drawGrid() {
         ctx.strokeStyle = 'rgba(222, 245, 229, 0.08)';
         ctx.lineWidth = 1;
-        for (let x = 0; x <= canvas.width; x += GRID_SIZE) {
+        for (let x = 0; x <= WORLD_WIDTH; x += GRID_SIZE) {
           ctx.beginPath();
           ctx.moveTo(x, 0);
-          ctx.lineTo(x, canvas.height);
+          ctx.lineTo(x, WORLD_HEIGHT);
           ctx.stroke();
         }
 
-        for (let y = 0; y <= canvas.height; y += GRID_SIZE) {
+        for (let y = 0; y <= WORLD_HEIGHT; y += GRID_SIZE) {
           ctx.beginPath();
           ctx.moveTo(0, y);
-          ctx.lineTo(canvas.width, y);
+          ctx.lineTo(WORLD_WIDTH, y);
           ctx.stroke();
         }
       }
@@ -3097,13 +3718,15 @@
 
       function render() {
         ctx.save();
+        let shakeOffsetX = 0;
+        let shakeOffsetY = 0;
         if (state.baseHitShakeTimer > 0 && state.baseHitShakePower > 0) {
           const ratio = clamp(state.baseHitShakeTimer / BASE_HIT_SHAKE_MS, 0, 1);
           const power = state.baseHitShakePower * ratio;
-          const offsetX = (Math.random() * 2 - 1) * power;
-          const offsetY = (Math.random() * 2 - 1) * power;
-          ctx.translate(offsetX, offsetY);
+          shakeOffsetX = (Math.random() * 2 - 1) * power;
+          shakeOffsetY = (Math.random() * 2 - 1) * power;
         }
+        ctx.translate(-camera.x + shakeOffsetX, -camera.y + shakeOffsetY);
 
         drawBackground();
         drawGrid();
@@ -3178,6 +3801,7 @@
           if (state.spawnQueue.length > 0 && state.spawnTimer <= 0) {
             const zombieType = state.spawnQueue.shift();
             spawnZombie(zombieType);
+            state.waveSpawned += 1;
             const baseInterval = Math.max(160, 520 - state.wave * 7);
             state.spawnTimer = baseInterval + Math.random() * 150;
           }
@@ -3210,15 +3834,88 @@
       function gameLoop(timestamp) {
         const dt = Math.min(50, timestamp - lastTime || 16.67);
         lastTime = timestamp;
-        update(dt);
+        const simDt = dt * (state.gameSpeed || gameSpeedMultiplier || 1);
+        update(simDt);
         render();
         requestAnimationFrame(gameLoop);
       }
 
-      canvas.addEventListener('mousemove', (event) => handleCanvasPointer(event, false));
-      canvas.addEventListener('click', (event) => handleCanvasPointer(event, true));
-      canvas.addEventListener('mouseleave', () => {
-        state.hoverCell = null;
+      function beginCanvasDrag(event) {
+        if (ui.gameScreen.classList.contains('hidden')) {
+          return;
+        }
+        if (event.pointerType === 'mouse' && event.button !== 0) {
+          return;
+        }
+        ui.panHint.classList.remove('show');
+        dragState.active = true;
+        dragState.moved = false;
+        dragState.pointerId = event.pointerId;
+        dragState.startClientX = event.clientX;
+        dragState.startClientY = event.clientY;
+        dragState.startCameraX = camera.x;
+        dragState.startCameraY = camera.y;
+        if (canvas.setPointerCapture) {
+          canvas.setPointerCapture(event.pointerId);
+        }
+      }
+
+      function moveCanvasDrag(event) {
+        if (!dragState.active || event.pointerId !== dragState.pointerId) {
+          handleCanvasPointer(event, false);
+          return;
+        }
+
+        const dx = event.clientX - dragState.startClientX;
+        const dy = event.clientY - dragState.startClientY;
+        if (!dragState.moved && Math.hypot(dx, dy) > 8) {
+          dragState.moved = true;
+          ui.arenaViewport.classList.add('dragging');
+        }
+
+        if (dragState.moved) {
+          camera.x = dragState.startCameraX - dx;
+          camera.y = dragState.startCameraY - dy;
+          clampCameraToWorld();
+          state.hoverCell = null;
+          if (event.cancelable) {
+            event.preventDefault();
+          }
+          return;
+        }
+
+        handleCanvasPointer(event, false);
+      }
+
+      function endCanvasDrag(event, tapToPlace) {
+        if (!dragState.active || event.pointerId !== dragState.pointerId) {
+          return;
+        }
+        const moved = dragState.moved;
+        dragState.active = false;
+        dragState.moved = false;
+        dragState.pointerId = null;
+        ui.arenaViewport.classList.remove('dragging');
+        if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+        if (tapToPlace && !moved) {
+          handleCanvasPointer(event, true);
+        }
+      }
+
+      canvas.addEventListener('pointerdown', (event) => {
+        unlockAudio();
+        beginCanvasDrag(event);
+        handleCanvasPointer(event, false);
+      });
+      canvas.addEventListener('pointermove', moveCanvasDrag);
+      canvas.addEventListener('pointerup', (event) => endCanvasDrag(event, true));
+      canvas.addEventListener('pointercancel', (event) => endCanvasDrag(event, false));
+      canvas.addEventListener('pointerleave', () => {
+        if (!dragState.active) {
+          state.hoverCell = null;
+        }
       });
 
       bindButtonSfx(ui.clearSelectionBtn);
@@ -3227,6 +3924,9 @@
       bindButtonSfx(ui.upgradeBtn);
       bindButtonSfx(ui.sellBtn);
       bindButtonSfx(ui.restartBtn);
+      for (let i = 0; i < ui.speedButtons.length; i += 1) {
+        bindButtonSfx(ui.speedButtons[i]);
+      }
 
       ui.clearSelectionBtn.addEventListener('click', () => {
         selectedPool.clear();
@@ -3243,7 +3943,25 @@
       ui.skipPrepBtn.addEventListener('click', () => {
         if (state.phase === 'prep') {
           startNextWave();
+          return;
         }
+        if (canSkipCurrentWave()) {
+          const fromWave = state.wave;
+          startNextWave();
+          showNotice('Skipped wave ' + fromWave + ' to wave ' + state.wave + '.');
+        }
+      });
+
+      for (let i = 0; i < ui.speedButtons.length; i += 1) {
+        const button = ui.speedButtons[i];
+        button.addEventListener('click', () => {
+          const speed = Number(button.dataset.speed || '1');
+          setGameSpeed(speed);
+        });
+      }
+
+      window.addEventListener('resize', () => {
+        resizeArenaCanvas();
       });
 
       ui.upgradeBtn.addEventListener('click', () => {
@@ -3261,6 +3979,8 @@
       setActiveMap(selectedMapId);
       renderMapSelection();
       renderCharacterSelection();
+      renderSpeedButtons();
+      ui.towerLimitNote.textContent = 'Defender Limit Total: ' + MAX_TOTAL_TOWERS;
       renderTowerInfo();
       updateHud();
       requestAnimationFrame(gameLoop);
