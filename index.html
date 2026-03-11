@@ -1363,6 +1363,17 @@
         });
       }
 
+      function resumeAudioIfNeeded() {
+        const ctx = ensureAudio();
+        if (!ctx) {
+          return;
+        }
+        if (ctx.state === 'running') {
+          return;
+        }
+        ctx.resume().catch(() => {});
+      }
+
       function playTone(config) {
         runWhenAudioReady((ctx) => {
           const now = ctx.currentTime + Math.max(0, config.delay || 0);
@@ -1713,8 +1724,20 @@
         });
       }
 
-      document.addEventListener('pointerdown', unlockAudio, { once: true });
-      document.addEventListener('keydown', unlockAudio, { once: true });
+      const unlockAudioEvents = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'];
+      for (let i = 0; i < unlockAudioEvents.length; i += 1) {
+        const eventName = unlockAudioEvents[i];
+        const usePassive = eventName !== 'keydown';
+        document.addEventListener(eventName, unlockAudio, usePassive ? { passive: true } : undefined);
+      }
+
+      window.addEventListener('focus', resumeAudioIfNeeded);
+      window.addEventListener('pageshow', resumeAudioIfNeeded);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          resumeAudioIfNeeded();
+        }
+      });
 
       const MAP_CATALOG = [
         {
@@ -4512,6 +4535,41 @@
         return true;
       }
 
+      function handoffPinchToSingleFingerDrag() {
+        if (touchPointers.size !== 1) {
+          pinchState.active = false;
+          return;
+        }
+
+        const iterator = touchPointers.entries().next();
+        if (!iterator || iterator.done) {
+          pinchState.active = false;
+          return;
+        }
+
+        const remaining = iterator.value;
+        const pointerId = remaining[0];
+        const point = remaining[1];
+
+        pinchState.active = false;
+        dragState.active = true;
+        dragState.moved = true;
+        dragState.pointerId = pointerId;
+        dragState.startClientX = point.x;
+        dragState.startClientY = point.y;
+        dragState.startCameraX = camera.x;
+        dragState.startCameraY = camera.y;
+        ui.arenaViewport.classList.add('dragging');
+
+        if (canvas.setPointerCapture) {
+          try {
+            canvas.setPointerCapture(pointerId);
+          } catch (error) {
+            // Some mobile browsers may reject capture during pinch handoff.
+          }
+        }
+      }
+
       function beginCanvasDrag(event) {
         if (ui.gameScreen.classList.contains('hidden')) {
           return;
@@ -4604,14 +4662,25 @@
         const wasPinching = pinchState.active;
         removeTouchPointer(event);
         if (pinchState.active && touchPointers.size < 2) {
-          pinchState.active = false;
+          handoffPinchToSingleFingerDrag();
         }
-        endCanvasDrag(event, !wasPinching);
+        if (wasPinching) {
+          endCanvasDrag(event, false);
+          return;
+        }
+        endCanvasDrag(event, true);
       });
       canvas.addEventListener('pointercancel', (event) => {
+        const wasPinching = pinchState.active;
         removeTouchPointer(event);
-        if (touchPointers.size < 2) {
+        if (pinchState.active && touchPointers.size < 2) {
+          handoffPinchToSingleFingerDrag();
+        } else if (touchPointers.size < 2) {
           pinchState.active = false;
+        }
+        if (wasPinching) {
+          endCanvasDrag(event, false);
+          return;
         }
         endCanvasDrag(event, false);
       });
