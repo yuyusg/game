@@ -1167,7 +1167,7 @@
       <div id="playWrap">
         <div id="arenaViewport">
           <canvas id="gameCanvas" width="1000" height="560"></canvas>
-          <div id="panHint">Drag or pinch | Use +/- to zoom</div>
+          <div id="panHint">Drag to move | Use +/- to zoom</div>
           <div id="towerPopup" class="hidden">
             <h3>Tower Info</h3>
             <div id="towerInfo">
@@ -1223,6 +1223,7 @@
       const MIN_CAMERA_ZOOM = 0.65;
       const MAX_CAMERA_ZOOM = 1.8;
       const CAMERA_ZOOM_STEP = 0.15;
+      const ENABLE_TOUCH_PINCH_ZOOM = false;
       const PATH_ARROW_HINT_MS = 8500;
       const SPAWN_NO_BUILD_BACK_DISTANCE = 220;
       const SPAWN_NO_BUILD_FORWARD_DISTANCE = 130;
@@ -4638,9 +4639,11 @@
         unlockAudio();
         storeTouchPointer(event);
         if (event.pointerType === 'touch' && touchPointers.size >= 2) {
-          beginPinchZoom();
-          if (event.cancelable) {
-            event.preventDefault();
+          if (ENABLE_TOUCH_PINCH_ZOOM) {
+            beginPinchZoom();
+            if (event.cancelable) {
+              event.preventDefault();
+            }
           }
           return;
         }
@@ -4649,7 +4652,7 @@
       });
       canvas.addEventListener('pointermove', (event) => {
         storeTouchPointer(event);
-        if (pinchState.active) {
+        if (ENABLE_TOUCH_PINCH_ZOOM && pinchState.active) {
           updatePinchZoom();
           if (event.cancelable) {
             event.preventDefault();
@@ -4659,10 +4662,12 @@
         moveCanvasDrag(event);
       });
       canvas.addEventListener('pointerup', (event) => {
-        const wasPinching = pinchState.active;
+        const wasPinching = ENABLE_TOUCH_PINCH_ZOOM && pinchState.active;
         removeTouchPointer(event);
-        if (pinchState.active && touchPointers.size < 2) {
+        if (ENABLE_TOUCH_PINCH_ZOOM && pinchState.active && touchPointers.size < 2) {
           handoffPinchToSingleFingerDrag();
+        } else if (!ENABLE_TOUCH_PINCH_ZOOM && touchPointers.size < 2) {
+          pinchState.active = false;
         }
         if (wasPinching) {
           endCanvasDrag(event, false);
@@ -4671,9 +4676,9 @@
         endCanvasDrag(event, true);
       });
       canvas.addEventListener('pointercancel', (event) => {
-        const wasPinching = pinchState.active;
+        const wasPinching = ENABLE_TOUCH_PINCH_ZOOM && pinchState.active;
         removeTouchPointer(event);
-        if (pinchState.active && touchPointers.size < 2) {
+        if (ENABLE_TOUCH_PINCH_ZOOM && pinchState.active && touchPointers.size < 2) {
           handoffPinchToSingleFingerDrag();
         } else if (touchPointers.size < 2) {
           pinchState.active = false;
