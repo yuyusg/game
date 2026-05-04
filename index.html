@@ -1068,12 +1068,14 @@
       };
     }
 
-    function restoreState(state) {
+    function restoreState(state, options = {}) {
+      const { preserveMistakeCount = false } = options;
+      const currentMistakes = game.mistakes;
       game.board = cloneBoard(state.board);
       game.notes = state.notes.map((list) => new Set(list));
       game.selected = state.selected ? { ...state.selected } : null;
       game.noteMode = state.noteMode;
-      game.mistakes = state.mistakes;
+      game.mistakes = preserveMistakeCount ? Math.max(currentMistakes, state.mistakes) : state.mistakes;
       game.hintsUsed = state.hintsUsed;
       game.wrongCells = new Set(state.wrongCells || []);
       game.elapsed = state.elapsed;
@@ -1095,7 +1097,7 @@
       }
       game.future.push(snapshot());
       const prev = game.history.pop();
-      restoreState(prev);
+      restoreState(prev, { preserveMistakeCount: true });
     }
 
     function redoMove() {
@@ -1104,7 +1106,7 @@
       }
       game.history.push(snapshot());
       const next = game.future.pop();
-      restoreState(next);
+      restoreState(next, { preserveMistakeCount: true });
     }
 
     function renderStats() {
