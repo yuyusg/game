@@ -80,7 +80,8 @@
       position: fixed;
       inset: 0;
       display: grid;
-      place-items: center;
+      justify-items: center;
+      align-items: start;
       padding-top: max(8px, env(safe-area-inset-top));
       padding-right: max(8px, env(safe-area-inset-right));
       padding-bottom: max(8px, env(safe-area-inset-bottom));
@@ -99,7 +100,7 @@
       animation: rise 450ms ease;
       display: flex;
       flex-direction: column;
-      transform-origin: center center;
+      transform-origin: top center;
     }
 
     @keyframes rise {
