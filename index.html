@@ -1,4789 +1,1797 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Tower Defense 40 Wave</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sudoku Studio</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Sora:wght@400;600;700;800&display=swap');
+
     :root {
-      --bg: #101d15;
-      --panel: #14271d;
-      --panel-2: #1c3427;
-      --text: #eaf6eb;
-      --accent: #f5c355;
-      --danger: #f0746a;
-      --good: #7ad88f;
-      --path: #8f7c53;
-      --path-edge: #5f4f35;
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-right: env(safe-area-inset-right, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-left: env(safe-area-inset-left, 0px);
+      --bg-a: #f8f2e4;
+      --bg-b: #d7ecf1;
+      --card: rgba(255, 252, 246, 0.92);
+      --ink: #153247;
+      --ink-soft: #486170;
+      --given: #0e2f47;
+      --line: #bdd1d8;
+      --line-strong: #6f8f9a;
+      --accent: #0f8a8d;
+      --accent-soft: #d8f1ef;
+      --accent-2: #da8f2b;
+      --danger: #d34b40;
+      --danger-soft: #fde7e3;
+      --good: #3a9957;
+      --peer: #edf7fb;
+      --selected: #cdeff3;
+      --same: #f4f8db;
+      --shadow: 0 20px 45px rgba(21, 50, 71, 0.18);
     }
 
     * {
       box-sizing: border-box;
     }
 
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
     body {
       margin: 0;
-      font-family: "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background:
-        radial-gradient(circle at 10% 10%, #1f3829 0%, transparent 45%),
-        radial-gradient(circle at 90% 80%, #1a2f24 0%, transparent 45%),
-        var(--bg);
-      color: var(--text);
-      min-height: 100vh;
       min-height: 100dvh;
-      overflow-x: hidden;
-    }
-
-    #app {
-      width: 100%;
-      max-width: none;
-      margin: 0;
-      min-height: 100vh;
-      min-height: 100dvh;
-      padding:
-        calc(12px + var(--safe-top))
-        calc(12px + var(--safe-right))
-        calc(12px + var(--safe-bottom))
-        calc(12px + var(--safe-left));
-    }
-
-    #hud {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-
-    #hudStrip {
-      display: grid;
-      grid-template-columns: minmax(120px, 160px) minmax(220px, 1fr) minmax(120px, 160px);
-      align-items: center;
-      gap: 8px;
-      background: linear-gradient(160deg, var(--panel), var(--panel-2));
-      border: 1px solid #2e4f3b;
-      border-radius: 10px;
-      padding: 8px 10px;
-    }
-
-    .hudSide {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      font-weight: 700;
-    }
-
-    .hudSide .label {
-      font-size: 0.66rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      opacity: 0.8;
-    }
-
-    .hudSide .value {
-      font-weight: 700;
-      font-size: 1rem;
-      line-height: 1.15;
-    }
-
-    .hudSide.right {
-      text-align: right;
-    }
-
-    #hudCenter {
-      min-width: 0;
-    }
-
-    #baseHpLabel {
-      text-align: center;
-      font-size: 0.72rem;
-      opacity: 0.9;
-      margin-bottom: 4px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    #baseHpBar {
-      position: relative;
-      height: 12px;
-      border-radius: 999px;
-      border: 1px solid #56755f;
-      background: rgba(9, 18, 13, 0.55);
+      height: 100dvh;
+      font-family: "Sora", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(130deg, var(--bg-a) 0%, var(--bg-b) 100%);
+      display: block;
+      padding: 0;
       overflow: hidden;
     }
 
-    #baseHpFill {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 100%;
-      background: linear-gradient(90deg, #e27a68 0%, #f2b165 55%, #89d48f 100%);
-      border-radius: inherit;
-      transition: width 0.14s linear;
-    }
-
-    #hudSubline {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      font-size: 0.74rem;
-      background: rgba(13, 24, 18, 0.52);
-      border: 1px solid #304c3b;
-      border-radius: 8px;
-      padding: 6px 9px;
-    }
-
-    #towerLimitNote {
-      opacity: 0.86;
-      white-space: nowrap;
-    }
-
-    #statusValue {
-      text-align: right;
-      font-weight: 600;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    #selectionScreen,
-    #gameScreen {
-      background: linear-gradient(170deg, rgba(20, 39, 29, 0.95), rgba(16, 29, 21, 0.98));
-      border: 1px solid #2f4d3a;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
-    }
-
-    #selectionScreen {
-      position: relative;
-      overflow: hidden;
-      border-color: #456353;
-      background:
-        radial-gradient(circle at 14% 12%, rgba(78, 143, 116, 0.2), transparent 45%),
-        radial-gradient(circle at 84% 18%, rgba(253, 210, 113, 0.14), transparent 34%),
-        linear-gradient(165deg, rgba(16, 32, 24, 0.98), rgba(13, 24, 19, 0.99));
-    }
-
-    #selectionScreen::before {
+    body::before,
+    body::after {
       content: "";
-      position: absolute;
+      position: fixed;
+      z-index: -1;
+      border-radius: 999px;
+      filter: blur(0.5px);
+    }
+
+    body::before {
+      width: 36rem;
+      height: 36rem;
+      background: radial-gradient(circle at 30% 30%, rgba(218, 143, 43, 0.24), rgba(218, 143, 43, 0));
+      top: -12rem;
+      right: -10rem;
+    }
+
+    body::after {
+      width: 28rem;
+      height: 28rem;
+      background: radial-gradient(circle at 70% 60%, rgba(15, 138, 141, 0.2), rgba(15, 138, 141, 0));
+      left: -8rem;
+      bottom: -9rem;
+    }
+
+    .viewport-stage {
+      position: fixed;
       inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(120deg, rgba(255, 255, 255, 0.035) 0%, transparent 34%),
-        repeating-linear-gradient(
-          -24deg,
-          rgba(170, 210, 188, 0.03) 0 8px,
-          rgba(15, 24, 20, 0.02) 8px 16px
-        );
-      opacity: 0.7;
-    }
-
-    #profileBar {
-      position: relative;
-      z-index: 1;
-      margin-bottom: 12px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 10px;
-      align-items: center;
-      border: 1px solid #4b6c58;
-      border-radius: 12px;
-      background: linear-gradient(165deg, rgba(24, 47, 36, 0.9), rgba(14, 27, 21, 0.94));
-      padding: 10px 12px;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
-    }
-
-    #expPanel {
-      min-width: 0;
-    }
-
-    #expTop {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      margin-bottom: 5px;
-      letter-spacing: 0.04em;
-    }
-
-    #levelValue {
-      color: #f4d493;
-      white-space: nowrap;
-    }
-
-    #expText {
-      opacity: 0.92;
-      text-align: right;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    #expTrack {
-      height: 12px;
-      border-radius: 999px;
-      border: 1px solid #547261;
-      background: rgba(8, 16, 12, 0.56);
+      place-items: center;
+      padding-top: max(8px, env(safe-area-inset-top));
+      padding-right: max(8px, env(safe-area-inset-right));
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      padding-left: max(8px, env(safe-area-inset-left));
       overflow: hidden;
     }
 
-    #expFill {
-      height: 100%;
-      width: 0;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #7ecf8e 0%, #a9e8a0 45%, #f4d67f 100%);
-      transition: width 0.2s ease;
-    }
-
-    #cashPanel {
-      border: 1px solid #5b6f45;
-      border-radius: 10px;
-      padding: 7px 10px;
-      background: linear-gradient(165deg, rgba(60, 75, 36, 0.9), rgba(42, 56, 24, 0.92));
+    .app-shell {
+      width: min(1100px, 96vw);
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 22px;
+      backdrop-filter: blur(9px);
+      animation: rise 450ms ease;
       display: flex;
-      align-items: center;
-      gap: 7px;
-      min-width: 108px;
-      justify-content: center;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      flex-direction: column;
+      transform-origin: center center;
     }
 
-    #cashIcon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 20px;
-      height: 20px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 232, 168, 0.64);
-      background: rgba(255, 219, 122, 0.2);
-      color: #ffe7a4;
-      font-weight: 800;
-      font-size: 0.78rem;
-      line-height: 1;
+    @keyframes rise {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
-    #cashValue {
-      font-weight: 800;
-      font-size: 0.88rem;
-      color: #f6f2dc;
-      letter-spacing: 0.03em;
-    }
-
-    #selectionHeader {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
-      border: 1px solid #395543;
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: linear-gradient(170deg, rgba(25, 47, 36, 0.82), rgba(17, 31, 24, 0.8));
-    }
-
-    #selectionHeader h2 {
-      margin: 0;
-      font-size: 1.45rem;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      text-shadow: 0 3px 16px rgba(0, 0, 0, 0.36);
-    }
-
-    #selectionHint {
-      margin: 0;
-      opacity: 0.9;
-      font-size: 0.82rem;
-      letter-spacing: 0.02em;
-    }
-
-    #mapSection {
-      margin-bottom: 14px;
-      border: 1px solid #395845;
-      border-radius: 12px;
-      padding: 12px;
-      background: linear-gradient(160deg, rgba(32, 54, 42, 0.8), rgba(20, 34, 27, 0.84));
-      position: relative;
-      z-index: 1;
-    }
-
-    #mapSection h3 {
-      margin: 0 0 5px;
-      font-size: 1.02rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: #f6dc9a;
-    }
-
-    #mapGrid {
-      margin-top: 10px;
+    .top-bar {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 18px;
     }
 
-    .mapCard {
-      border: 1px solid #3f644f;
-      background: linear-gradient(162deg, #213a2d, #16281f);
-      border-radius: 12px;
-      color: var(--text);
-      padding: 11px;
-      text-align: left;
-      cursor: pointer;
-      min-height: 104px;
-      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 20px rgba(0, 0, 0, 0.18);
+    .brand h1 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      font-size: clamp(1.7rem, 3vw, 2.25rem);
+      color: #102b3f;
     }
 
-    .mapCard:hover {
-      transform: translateY(-2px);
-      border-color: #71b28d;
-      filter: brightness(1.03);
-    }
-
-    .mapCard.selected {
-      border-color: #e7c477;
-      box-shadow: 0 0 0 1px rgba(245, 195, 85, 0.42) inset, 0 10px 24px rgba(60, 45, 17, 0.36);
-      background: linear-gradient(165deg, #40321e, #2b2417);
-    }
-
-    .mapCard strong {
-      display: block;
-      margin-bottom: 5px;
+    .brand p {
+      margin: 6px 0 0;
+      color: var(--ink-soft);
       font-size: 0.95rem;
-      letter-spacing: 0.02em;
     }
 
-    .mapCard .meta {
-      display: block;
-      font-size: 0.76rem;
-      opacity: 0.86;
-      margin-bottom: 4px;
-    }
-
-    .mapCard .desc {
-      display: block;
-      font-size: 0.75rem;
-      opacity: 0.78;
-      line-height: 1.35;
-    }
-
-    .mapCard .record {
-      display: block;
-      margin-top: 6px;
-      font-size: 0.68rem;
-      opacity: 0.9;
-      color: #d2efdc;
-      letter-spacing: 0.02em;
-    }
-
-    #characterGrid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 10px;
-      max-height: 63vh;
-      overflow: auto;
-      padding-right: 2px;
-      position: relative;
-      z-index: 1;
-    }
-
-    #characterGrid::-webkit-scrollbar,
-    #shopBar::-webkit-scrollbar {
-      height: 8px;
-      width: 8px;
-    }
-
-    #characterGrid::-webkit-scrollbar-thumb,
-    #shopBar::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #587862, #3d5948);
-      border-radius: 999px;
-    }
-
-    #characterGrid::-webkit-scrollbar-track,
-    #shopBar::-webkit-scrollbar-track {
-      background: rgba(8, 15, 12, 0.45);
-      border-radius: 999px;
-    }
-
-    .charCard {
-      border: 1px solid #365944;
-      background: linear-gradient(160deg, #1f3529, #17291f);
-      border-radius: 12px;
-      color: var(--text);
-      padding: 11px;
-      text-align: left;
-      cursor: pointer;
-      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 18px rgba(0, 0, 0, 0.16);
-    }
-
-    .charCard:hover {
-      transform: translateY(-2px);
-      border-color: #79b694;
-      background: linear-gradient(160deg, #253f31, #1a2e23);
-    }
-
-    .charCard.selected {
-      border-color: #f0cc7c;
-      background: linear-gradient(160deg, #423421, #2b2314);
-      box-shadow: 0 0 0 1px rgba(245, 195, 85, 0.38) inset, 0 9px 20px rgba(61, 43, 15, 0.3);
-    }
-
-    .charCard.locked {
-      opacity: 0.56;
-      cursor: not-allowed;
-      filter: grayscale(0.18);
-    }
-
-    .charTop {
+    .top-actions {
       display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: baseline;
-      margin-bottom: 4px;
-    }
-
-    .charName {
-      font-weight: 700;
-      font-size: 0.96rem;
-      line-height: 1.2;
-    }
-
-    .charCost {
-      color: var(--accent);
-      font-weight: 700;
-      white-space: nowrap;
-      font-size: 0.92rem;
-    }
-
-    .charDesc {
-      font-size: 0.78rem;
-      opacity: 0.84;
-      margin: 6px 0 8px;
-      min-height: 32px;
-    }
-
-    .charStats {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 4px;
-      font-size: 0.73rem;
-      opacity: 0.9;
-    }
-
-    #selectionFooter {
-      margin: 0 0 12px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px;
+      flex-wrap: wrap;
+      justify-content: end;
       align-items: center;
-      position: relative;
-      z-index: 1;
-      border: 1px solid #395543;
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: linear-gradient(170deg, rgba(25, 44, 34, 0.88), rgba(14, 27, 21, 0.9));
-    }
-
-    #selectedCount {
-      font-size: 0.84rem;
-      letter-spacing: 0.04em;
-      opacity: 0.93;
-      font-weight: 700;
-      min-width: 0;
     }
 
     .btn {
-      border: 1px solid #557d64;
-      background: linear-gradient(180deg, #2e4c3a, #243d30);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 9px 12px;
+      border: 0;
+      border-radius: 12px;
       cursor: pointer;
-      font-weight: 600;
+      font-family: inherit;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      padding: 11px 14px;
+      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, color 140ms ease;
     }
 
-    .btn:hover {
-      filter: brightness(1.06);
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(140deg, var(--accent), #0f6f7a);
+      color: #f6ffff;
+      box-shadow: 0 10px 20px rgba(15, 138, 141, 0.28);
+    }
+
+    .btn-secondary {
+      background: #edf3f6;
+      color: var(--ink);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid #d3e0e4;
+      color: #203a49;
+    }
+
+    .btn.toggle-active {
+      background: linear-gradient(140deg, var(--accent-2), #c17614);
+      color: #fff9ef;
+      box-shadow: 0 10px 20px rgba(218, 143, 43, 0.28);
     }
 
     .btn:disabled {
-      opacity: 0.5;
       cursor: not-allowed;
-      filter: none;
+      opacity: 0.45;
+      transform: none;
+      box-shadow: none;
     }
 
-    .btn.primary {
-      border-color: #9d8141;
-      background: linear-gradient(180deg, #6f5827, #57441d);
-      box-shadow: 0 8px 22px rgba(92, 70, 24, 0.33);
-    }
-
-    #clearSelectionBtn {
-      border-color: #4e725e;
-      background: linear-gradient(180deg, #355744, #284536);
-      font-size: 0.8rem;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-
-    #startGameBtn {
-      padding: 10px 16px;
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      min-width: 180px;
-    }
-
-    #playWrap {
+    .difficulty {
       display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 10px;
-      align-items: start;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
-    #arenaViewport {
-      position: relative;
-      width: 100%;
-      height: min(80vh, calc(100vh - 220px));
-      min-height: 320px;
-      border: 1px solid #41614e;
-      border-radius: 10px;
-      overflow: hidden;
-      background: #1a2d22;
-      cursor: grab;
-    }
-
-    #arenaViewport.dragging {
-      cursor: grabbing;
-    }
-
-    #gameCanvas {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: #1a2d22;
-      display: block;
-      touch-action: none;
-    }
-
-    #panHint {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) scale(0.96);
-      padding: 10px 14px;
-      border-radius: 12px;
-      background: rgba(10, 21, 15, 0.82);
-      border: 1px solid rgba(124, 196, 157, 0.55);
-      color: #dcf8e8;
-      font-size: 0.82rem;
+    .difficulty button {
+      border: 1px solid #cad8dc;
+      background: #f8fbfd;
+      color: #28414f;
+      border-radius: 11px;
+      padding: 9px 8px;
+      font-family: inherit;
       font-weight: 700;
-      letter-spacing: 0.04em;
-      pointer-events: none;
-      user-select: none;
-      opacity: 0;
-      z-index: 12;
-      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.34);
+      cursor: pointer;
     }
 
-    #panHint.show {
-      animation: panHintPulse 1s ease forwards;
+    .difficulty button.active {
+      background: linear-gradient(140deg, #fff7e7, #fbeccf);
+      border-color: #deb26d;
+      color: #704500;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
     }
 
-    @keyframes panHintPulse {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -52%) scale(0.95);
-      }
-      18% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
-      60% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: translate(-50%, -49%) scale(1.03);
-      }
-    }
-
-    #towerPopup {
-      position: absolute;
-      top: calc(70px + var(--safe-top));
-      right: calc(10px + var(--safe-right));
-      width: min(280px, 78vw);
-      z-index: 10;
-      pointer-events: auto;
-      background: linear-gradient(170deg, #203428, #1a2a21);
-      border: 1px solid #355440;
-      border-radius: 10px;
-      padding: 8px;
-    }
-
-    #towerPopup h3 {
-      margin: 0 0 6px;
-      font-size: 0.86rem;
-    }
-
-    #towerPopupButtons {
+    .stats {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px;
-      margin-top: 6px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
-    #towerPopupButtons .btn {
-      padding: 7px 6px;
-      font-size: 0.72rem;
-    }
-
-    #towerInfo {
-      background: rgba(10, 20, 15, 0.45);
-      border: 1px solid #35513f;
-      border-radius: 8px;
-      padding: 7px;
-      min-height: 72px;
-      max-height: 110px;
-      overflow: auto;
-      font-size: 0.7rem;
-      line-height: 1.3;
-    }
-
-    #towerInfo .muted {
-      opacity: 0.78;
-      font-size: 0.68rem;
-    }
-
-    #speedControls {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-    }
-
-    #zoomControls {
-      display: inline-flex;
-      align-items: center;
+    .stat {
+      background: #f7fbfd;
+      border: 1px solid #d3dfe4;
+      border-radius: 11px;
+      padding: 10px 12px;
+      display: grid;
       gap: 4px;
-      padding: 2px 5px;
-      border-radius: 999px;
-      border: 1px solid #3c5a47;
-      background: linear-gradient(160deg, rgba(20, 36, 27, 0.88), rgba(15, 28, 21, 0.9));
     }
 
-    .zoomBtn {
-      padding: 4px 7px;
-      min-width: 28px;
-      font-size: 0.72rem;
+    .stat-label {
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: #5e7783;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #1a3547;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 18px;
+      align-items: start;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .board-wrap {
+      background: #fdfefe;
+      border: 1px solid #d6e1e5;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
+    }
+
+    .board {
+      width: min(100%, 680px);
+      margin: 0 auto;
+      aspect-ratio: 1 / 1;
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      background: #f5f9fb;
+      border: 3px solid var(--line-strong);
+      border-radius: 12px;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .cell {
+      appearance: none;
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      color: var(--ink);
+      position: relative;
+      transition: background 100ms ease, transform 100ms ease;
+    }
+
+    .cell:nth-child(9n) {
+      border-right: 0;
+    }
+
+    .cell.row-end {
+      border-bottom: 0;
+    }
+
+    .cell.block-right {
+      border-right: 3px solid var(--line-strong);
+    }
+
+    .cell.block-bottom {
+      border-bottom: 3px solid var(--line-strong);
+    }
+
+    .cell .digit {
+      font-size: clamp(1.05rem, 2.6vw, 1.7rem);
+      font-weight: 700;
       line-height: 1;
     }
 
-    #zoomValue {
-      min-width: 42px;
-      text-align: center;
-      font-size: 0.66rem;
+    .cell.given {
+      background: #f5fbff;
+      color: var(--given);
+      font-weight: 800;
+    }
+
+    .cell.selected {
+      background: var(--selected);
+    }
+
+    .cell.peer {
+      background: var(--peer);
+    }
+
+    .cell.same {
+      background: var(--same);
+    }
+
+    .cell.selected.same {
+      background: #caecd5;
+    }
+
+    .cell.wrong .digit {
+      color: var(--danger);
+    }
+
+    .cell.invalid {
+      background: var(--danger-soft);
+      animation: shake 260ms ease;
+    }
+
+    @keyframes shake {
+      20% { transform: translateX(-2px); }
+      40% { transform: translateX(2px); }
+      60% { transform: translateX(-2px); }
+      80% { transform: translateX(2px); }
+      100% { transform: translateX(0); }
+    }
+
+    .notes-grid {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 4px;
+      color: #6e8490;
+      font-size: clamp(0.45rem, 1.2vw, 0.72rem);
       font-weight: 700;
-      letter-spacing: 0.03em;
-      color: #deeddc;
-      user-select: none;
+      line-height: 1;
     }
 
-    .speedBtn {
-      padding: 5px 8px;
-      font-size: 0.72rem;
-      min-width: 38px;
+    .notes-grid span {
+      display: grid;
+      place-items: center;
     }
 
-    .speedBtn.active {
-      border-color: var(--accent);
-      background: linear-gradient(180deg, #5d4a23, #4b3b1a);
-      color: #fff0ce;
+    .panel {
+      background: #fcfefe;
+      border: 1px solid #d7e3e8;
+      border-radius: 20px;
+      padding: 14px;
+      display: grid;
+      gap: 11px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+      align-content: start;
     }
 
-    #hotbarWrap {
-      position: absolute;
-      left: calc(10px + var(--safe-left));
-      right: calc(10px + var(--safe-right));
-      bottom: calc(10px + var(--safe-bottom));
-      z-index: 9;
-      pointer-events: auto;
+    .panel h2 {
+      margin: 2px 0;
+      font-size: 0.95rem;
+      letter-spacing: 0.2px;
+      color: #29414f;
     }
 
-    #miniControlRow {
-      margin-top: 6px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 6px;
-    }
-
-    #skipPrepBtn {
-      padding: 6px 9px;
-      font-size: 0.72rem;
-      min-width: 118px;
-    }
-
-    #shopBar {
-      display: flex;
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding: 2px 2px 6px;
-      scroll-behavior: smooth;
-      touch-action: pan-x;
     }
 
-    .shopItem {
-      border: 1px solid #486a56;
-      border-radius: 10px;
-      padding: 8px;
-      background: linear-gradient(160deg, #223629, #1a2a20);
-      color: var(--text);
-      text-align: left;
+    .number-pad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .number-pad button {
+      min-height: 54px;
+      font-size: 1.35rem;
+      font-weight: 800;
+      border-radius: 12px;
+      border: 1px solid #c8d8de;
+      background: #fbfdfe;
+      color: #1f3847;
       cursor: pointer;
-      min-height: 78px;
-      flex: 0 0 168px;
+      transition: background 120ms ease, transform 100ms ease;
     }
 
-    .shopItem:hover {
-      filter: brightness(1.05);
-    }
-
-    .shopItem.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(245, 195, 85, 0.4) inset;
-      background: linear-gradient(160deg, #3c3119, #2f2613);
-    }
-
-    .shopItem.locked {
-      opacity: 0.52;
-    }
-
-    .shopItem strong {
-      display: block;
-      font-size: 0.82rem;
-      margin-bottom: 3px;
-    }
-
-    .shopItem .cost {
-      color: var(--accent);
-      font-weight: 700;
-      font-size: 0.8rem;
-      display: block;
-      margin-bottom: 3px;
-    }
-
-    .shopItem .mini {
-      font-size: 0.67rem;
-      opacity: 0.86;
-      display: block;
+    .number-pad button:hover {
+      background: #eef7fa;
     }
 
     .hint {
-      opacity: 0.78;
-      font-size: 0.8rem;
-      line-height: 1.4;
-      margin: 0;
+      margin: 3px 0 0;
+      font-size: 0.82rem;
+      color: #5a7481;
+      line-height: 1.45;
     }
 
-    #resultOverlay {
+    .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(6, 12, 9, 0.72);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99;
-      padding: 16px;
-    }
-
-    #resultCard {
-      width: min(420px, 96vw);
-      background: linear-gradient(160deg, #20382b, #17271e);
-      border: 1px solid #42634f;
-      border-radius: 14px;
-      padding: 18px;
-      text-align: center;
-    }
-
-    #resultCard h2 {
-      margin: 0 0 8px;
-      font-size: 1.5rem;
-    }
-
-    #resultCard p {
-      margin: 0 0 14px;
-      opacity: 0.9;
+      background: rgba(9, 28, 39, 0.44);
+      display: grid;
+      place-items: center;
+      z-index: 20;
+      padding: 20px;
     }
 
     .hidden {
-      display: none !important;
-    }
-
-    body.inGame {
-      overflow: hidden;
-    }
-
-    body:not(.inGame) #hud {
       display: none;
     }
 
-    body.inGame #app {
-      padding: 0;
-      min-height: 100vh;
-      min-height: 100dvh;
+    .overlay-card {
+      background: #fffdf8;
+      border: 1px solid #e3d5bf;
+      border-radius: 18px;
+      box-shadow: 0 22px 40px rgba(15, 31, 43, 0.3);
+      width: min(430px, 94vw);
+      padding: 20px;
+      text-align: center;
     }
 
-    body.inGame #gameScreen {
-      position: fixed;
-      inset: 0;
-      z-index: 20;
-      border: 0;
-      border-radius: 0;
-      padding: 0;
-      box-shadow: none;
-      background: transparent;
+    .overlay-card h3 {
+      margin: 0 0 8px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.6rem;
+      color: #243f53;
     }
 
-    body.inGame #playWrap {
-      height: 100%;
-    }
-
-    body.inGame #arenaViewport {
-      height: 100%;
-      min-height: 100vh;
-      min-height: 100svh;
-      min-height: 100dvh;
-      border: 0;
-      border-radius: 0;
-    }
-
-    body.inGame #hud {
-      position: fixed;
-      top: calc(8px + var(--safe-top));
-      left: calc(8px + var(--safe-left));
-      right: calc(8px + var(--safe-right));
-      z-index: 30;
+    .overlay-card p {
       margin: 0;
-      pointer-events: none;
+      color: #47606d;
+      line-height: 1.5;
     }
 
-    body.inGame #hudStrip,
-    body.inGame #hudSubline {
-      backdrop-filter: blur(3px);
-      background: linear-gradient(165deg, rgba(14, 29, 21, 0.84), rgba(16, 32, 23, 0.86));
+    .overlay-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
     }
 
-    body.inGame #hudStrip {
-      padding: 7px 8px;
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 4px solid #ddedf2;
+      border-top-color: var(--accent);
+      margin: 0 auto 12px;
+      animation: spin 0.8s linear infinite;
     }
 
-    body.inGame #hudSubline {
-      padding: 5px 8px;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    body.inGame .hudSide .label,
-    body.inGame #baseHpLabel {
-      font-size: 0.62rem;
-    }
-
-    body.inGame .hudSide .value {
-      font-size: 0.9rem;
-    }
-
-    body.inGame #statusValue {
-      font-size: 0.7rem;
-    }
-
-    @media (max-width: 1040px) {
-      #arenaViewport {
-        height: min(74vh, calc(100vh - 220px));
+    @media (max-width: 980px) {
+      .app-shell {
+        border-radius: 22px;
+        padding: 14px;
       }
 
-      #towerPopup {
-        width: min(260px, calc(100vw - 20px));
-      }
-    }
-
-    @media (max-width: 680px) {
-      #profileBar {
+      .top-bar {
         grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .top-actions {
+        justify-content: start;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        order: 2;
+      }
+
+      .board-wrap {
+        padding: 10px;
+      }
+
+      .number-pad button {
+        min-height: 48px;
+      }
+    }
+
+    @media (max-height: 820px) {
+      .viewport-stage {
+        padding-top: max(4px, env(safe-area-inset-top));
+        padding-right: max(4px, env(safe-area-inset-right));
+        padding-bottom: max(4px, env(safe-area-inset-bottom));
+        padding-left: max(4px, env(safe-area-inset-left));
+      }
+
+      .app-shell {
+        padding: 12px;
+        border-radius: 18px;
+      }
+
+      .top-bar {
+        margin-bottom: 10px;
+        gap: 10px;
+      }
+
+      .brand h1 {
+        font-size: clamp(1.3rem, 2.4vw, 1.8rem);
+      }
+
+      .brand p {
+        margin-top: 4px;
+        font-size: 0.8rem;
+      }
+
+      .difficulty,
+      .stats {
+        gap: 6px;
+        margin-bottom: 10px;
+      }
+
+      .stat {
+        padding: 7px 8px;
+      }
+
+      .stat-label {
+        font-size: 0.62rem;
+      }
+
+      .stat-value {
+        font-size: 0.9rem;
+      }
+
+      .layout {
+        gap: 10px;
+      }
+
+      .board-wrap {
+        padding: 8px;
+      }
+
+      .panel {
+        padding: 10px;
         gap: 8px;
       }
 
-      #cashPanel {
-        justify-self: end;
+      .panel h2 {
+        font-size: 0.86rem;
       }
 
-      #hudStrip {
-        grid-template-columns: minmax(90px, 116px) minmax(0, 1fr) minmax(90px, 116px);
-      }
-
-      #characterGrid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 7px;
-        max-height: 56vh;
-      }
-
-      #selectionHeader h2 {
-        font-size: 1.16rem;
-      }
-
-      #selectionHint {
-        font-size: 0.76rem;
-      }
-
-      #selectionHeader {
-        margin-bottom: 10px;
+      .btn {
         padding: 8px 10px;
       }
 
-      #selectionFooter {
-        grid-template-columns: 1fr;
-        margin: 0 0 10px;
-        padding: 8px 9px;
-        gap: 7px;
+      .number-pad button {
+        min-height: 40px;
+        font-size: 1.1rem;
       }
 
-      #selectedCount {
+      .hint {
         font-size: 0.72rem;
-        letter-spacing: 0.02em;
-        line-height: 1.3;
+      }
+    }
+
+    @media (max-width: 980px) and (max-height: 760px) {
+      .top-bar {
+        grid-template-columns: 1fr auto;
       }
 
-      #startGameBtn {
-        width: 100%;
-        min-width: 0;
-        padding: 8px 10px;
-        font-size: 0.78rem;
-      }
-
-      #mapSection {
-        margin-bottom: 10px;
-        padding: 9px 10px;
-      }
-
-      #mapSection h3 {
-        margin-bottom: 4px;
-        font-size: 0.9rem;
-        letter-spacing: 0.04em;
-      }
-
-      #mapSection .hint {
-        font-size: 0.66rem;
-      }
-
-      #mapGrid {
-        margin-top: 7px;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 7px;
-      }
-
-      .mapCard {
-        min-height: 90px;
-        border-radius: 10px;
-        padding: 8px;
-      }
-
-      .mapCard strong {
-        margin-bottom: 3px;
-        font-size: 0.82rem;
-      }
-
-      .mapCard .meta {
-        margin-bottom: 2px;
-        font-size: 0.66rem;
-      }
-
-      .mapCard .desc {
-        font-size: 0.63rem;
-        line-height: 1.25;
-      }
-
-      .mapCard .record {
-        margin-top: 4px;
-        font-size: 0.6rem;
-      }
-
-      .charCard {
-        border-radius: 10px;
-        padding: 8px;
-      }
-
-      .charTop {
+      .top-actions {
+        justify-content: end;
         gap: 6px;
-        margin-bottom: 3px;
       }
 
-      .charName {
-        font-size: 0.82rem;
+      .difficulty,
+      .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
-      .charCost {
-        font-size: 0.76rem;
+      .layout {
+        grid-template-columns: minmax(0, 1fr) minmax(170px, 30vw);
       }
 
-      .charDesc {
-        font-size: 0.65rem;
-        margin: 4px 0 6px;
-        min-height: 22px;
+      .panel {
+        order: 0;
       }
 
-      .charStats {
-        gap: 3px;
-        font-size: 0.61rem;
+      .action-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      #arenaViewport {
-        height: min(72vh, calc(100vh - 240px));
-        min-height: 290px;
+      .number-pad button {
+        min-height: 34px;
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-height: 640px) {
+      .brand p {
+        display: none;
       }
 
-      #towerPopup {
-        top: calc(94px + var(--safe-top));
-        right: calc(6px + var(--safe-right));
-        width: min(230px, 84vw);
+      .btn {
+        padding: 7px 9px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      #towerPopupButtons {
-        grid-template-columns: 1fr;
+      .difficulty {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      #towerInfo {
-        max-height: 84px;
+      .action-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) and (max-height: 760px) {
+      .difficulty,
+      .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
-      #miniControlRow {
-        justify-content: space-between;
-      }
-
-      #skipPrepBtn {
-        flex: 1 1 100%;
-      }
-
-      #zoomValue {
-        min-width: 38px;
-      }
-
-      .shopItem {
-        flex: 0 0 148px;
-      }
-
-      body.inGame #hud {
-        top: calc(6px + var(--safe-top));
-        left: calc(6px + var(--safe-left));
-        right: calc(6px + var(--safe-right));
-      }
-
-      #hudSubline {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      #statusValue {
-        text-align: left;
-        width: 100%;
+      .action-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <header id="hud">
-      <div id="hudStrip">
-        <div class="hudSide">
-          <span class="label">Wave</span>
-          <span class="value" id="waveValue">0/40</span>
-        </div>
-        <div id="hudCenter">
-          <div id="baseHpLabel">Base HP <span id="baseHpValue">30</span></div>
-          <div id="baseHpBar">
-            <div id="baseHpFill"></div>
-          </div>
-        </div>
-        <div class="hudSide right">
-          <span class="label">Money</span>
-          <span class="value" id="moneyValue">$100</span>
-        </div>
+  <div class="viewport-stage" id="viewportStage">
+    <div class="app-shell" id="appShell">
+    <header class="top-bar">
+      <div class="brand">
+        <h1>Sudoku Studio</h1>
+        <p>Play with full controls, clean logic, and four difficulty tiers.</p>
       </div>
-      <div id="hudSubline">
-        <span id="towerLimitNote">Defender Limit Total: 30</span>
-        <span id="statusValue">Select a map + 5 characters</span>
+      <div class="top-actions">
+        <button class="btn btn-secondary" id="restartBtn" type="button">Restart Puzzle</button>
+        <button class="btn btn-primary" id="newGameBtn" type="button">New Puzzle</button>
       </div>
     </header>
 
-    <section id="selectionScreen">
-      <div id="profileBar">
-        <div id="expPanel">
-          <div id="expTop">
-            <span id="levelValue">LV 1</span>
-            <span id="expText">0 / 100 EXP</span>
-          </div>
-          <div id="expTrack">
-            <div id="expFill"></div>
-          </div>
-        </div>
-        <div id="cashPanel">
-          <span id="cashIcon">$</span>
-          <span id="cashValue">0</span>
-        </div>
-      </div>
-      <div id="selectionHeader">
-        <div>
-          <h2>Tower Defense Simulator Loadout</h2>
-          <p id="selectionHint">Pick 1 map and 1-5 defenders, then deploy your squad.</p>
-        </div>
-        <button id="clearSelectionBtn" class="btn">Reset Selection</button>
-      </div>
-      <div id="selectionFooter">
-        <button id="startGameBtn" class="btn primary" disabled>Start Defense</button>
-        <div id="selectedCount">Selected: 0 (min 1, max 5)</div>
-      </div>
-      <div id="mapSection">
-        <h3>Choose Battlefield (5 Maps)</h3>
-        <p class="hint">Difficulty and theme follow the map shape: Easy, Normal, Medium, Hard, Insane.</p>
-        <div id="mapGrid"></div>
-      </div>
-      <div id="characterGrid"></div>
+    <section class="difficulty" id="difficultyBar" aria-label="Difficulty"></section>
+
+    <section class="stats" aria-label="Game stats">
+      <article class="stat">
+        <span class="stat-label">Time</span>
+        <span class="stat-value" id="timeValue">00:00</span>
+      </article>
+      <article class="stat">
+        <span class="stat-label">Mistakes</span>
+        <span class="stat-value" id="mistakeValue">0/3</span>
+      </article>
+      <article class="stat">
+        <span class="stat-label">Hints</span>
+        <span class="stat-value" id="hintValue">0/3</span>
+      </article>
+      <article class="stat">
+        <span class="stat-label">Best</span>
+        <span class="stat-value" id="bestValue">--:--</span>
+      </article>
     </section>
 
-    <section id="gameScreen" class="hidden">
-      <div id="playWrap">
-        <div id="arenaViewport">
-          <canvas id="gameCanvas" width="1000" height="560"></canvas>
-          <div id="panHint">Drag to move | Use +/- to zoom</div>
-          <div id="towerPopup" class="hidden">
-            <h3>Tower Info</h3>
-            <div id="towerInfo">
-              <div class="muted">Click a placed tower to view stats and upgrades.</div>
-            </div>
-            <div id="towerPopupButtons">
-              <button id="upgradeBtn" class="btn" disabled>Select Tower</button>
-              <button id="sellBtn" class="btn" disabled>Sell Tower</button>
-            </div>
-          </div>
-          <div id="hotbarWrap">
-            <div id="shopBar"></div>
-            <div id="miniControlRow">
-              <button id="skipPrepBtn" class="btn">Start Wave</button>
-              <div id="zoomControls">
-                <button type="button" id="zoomOutBtn" class="btn zoomBtn" aria-label="Zoom out">-</button>
-                <span id="zoomValue">100%</span>
-                <button type="button" id="zoomInBtn" class="btn zoomBtn" aria-label="Zoom in">+</button>
-              </div>
-              <div id="speedControls">
-                <button type="button" class="btn speedBtn active" data-speed="1">1x</button>
-                <button type="button" class="btn speedBtn" data-speed="2">2x</button>
-                <button type="button" class="btn speedBtn" data-speed="3">3x</button>
-              </div>
-            </div>
-          </div>
+    <main class="layout">
+      <section class="board-wrap" aria-label="Sudoku board">
+        <div class="board" id="board"></div>
+      </section>
+
+      <aside class="panel" aria-label="Controls">
+        <h2>Tools</h2>
+        <div class="action-grid">
+          <button class="btn btn-ghost" id="noteBtn" type="button">Notes: Off</button>
+          <button class="btn btn-ghost" id="eraseBtn" type="button">Erase</button>
+          <button class="btn btn-ghost" id="hintBtn" type="button">Hint</button>
+          <button class="btn btn-ghost" id="undoBtn" type="button">Undo</button>
+          <button class="btn btn-ghost" id="redoBtn" type="button">Redo</button>
+          <button class="btn btn-ghost" id="clearSelectBtn" type="button">Unselect</button>
         </div>
-      </div>
-    </section>
+
+        <h2>Numbers</h2>
+        <div class="number-pad" id="numberPad" aria-label="Number pad"></div>
+
+        <p class="hint">Keyboard: <strong>1-9</strong> input, <strong>Backspace/Delete</strong> erase, <strong>N</strong> notes, <strong>H</strong> hint, <strong>Ctrl+Z / Ctrl+Y</strong> undo/redo.</p>
+      </aside>
+    </main>
+    </div>
   </div>
 
-  <div id="resultOverlay" class="hidden">
-    <div id="resultCard">
-      <h2 id="resultTitle">Result</h2>
+  <div class="overlay hidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
+    <div class="overlay-card">
+      <div class="spinner" aria-hidden="true"></div>
+      <h3>Building Puzzle</h3>
+      <p id="loadingText">Generating a fresh board...</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="resultOverlay">
+    <div class="overlay-card">
+      <h3 id="resultTitle">You Win!</h3>
       <p id="resultText"></p>
-      <button id="restartBtn" class="btn primary">Play Again</button>
+      <div class="overlay-actions">
+        <button class="btn btn-secondary" id="playAgainBtn" type="button">Play Again</button>
+        <button class="btn btn-primary" id="nextPuzzleBtn" type="button">New Puzzle</button>
+      </div>
     </div>
   </div>
 
   <script>
-    (() => {
-      const TOTAL_WAVES = 40;
-      const START_MONEY = 100;
-      const START_BASE_HP = 30;
-      const GRID_SIZE = 40;
-      const PATH_WIDTH = 56;
-      const WORLD_WIDTH = 1320;
-      const WORLD_HEIGHT = 820;
-      const MAP_OFFSET_X = 160;
-      const MAP_OFFSET_Y = 130;
-      const MAX_TOTAL_TOWERS = 30;
-      const PROFILE_STORAGE_KEY = 'td_profile_v1';
-      const MIN_CAMERA_ZOOM = 0.65;
-      const MAX_CAMERA_ZOOM = 1.8;
-      const CAMERA_ZOOM_STEP = 0.15;
-      const ENABLE_TOUCH_PINCH_ZOOM = false;
-      const PATH_ARROW_HINT_MS = 8500;
-      const SPAWN_NO_BUILD_BACK_DISTANCE = 220;
-      const SPAWN_NO_BUILD_FORWARD_DISTANCE = 130;
-      const SPAWN_NO_BUILD_SIDE_DISTANCE = 170;
-      const BASE_HIT_SHAKE_MS = 420;
-      const BASE_HIT_FLASH_MS = 460;
-      const BASE_HIT_PULSE_MS = 520;
+    const DIFFICULTIES = {
+      easy: { label: "Easy", clues: 40, maxAttempts: 8 },
+      medium: { label: "Medium", clues: 34, maxAttempts: 10 },
+      hard: { label: "Hard", clues: 28, maxAttempts: 12 },
+      expert: { label: "Expert", clues: 24, maxAttempts: 14 }
+    };
 
-      const canvas = document.getElementById('gameCanvas');
-      const ctx = canvas.getContext('2d');
-      const cols = Math.floor(WORLD_WIDTH / GRID_SIZE);
-      const rows = Math.floor(WORLD_HEIGHT / GRID_SIZE);
+    const BEST_KEY = "sudoku_studio_best_times_v1";
 
-      const ui = {
-        waveValue: document.getElementById('waveValue'),
-        moneyValue: document.getElementById('moneyValue'),
-        baseHpValue: document.getElementById('baseHpValue'),
-        baseHpFill: document.getElementById('baseHpFill'),
-        towerLimitNote: document.getElementById('towerLimitNote'),
-        statusValue: document.getElementById('statusValue'),
-        selectionScreen: document.getElementById('selectionScreen'),
-        gameScreen: document.getElementById('gameScreen'),
-        levelValue: document.getElementById('levelValue'),
-        expText: document.getElementById('expText'),
-        expFill: document.getElementById('expFill'),
-        cashValue: document.getElementById('cashValue'),
-        mapGrid: document.getElementById('mapGrid'),
-        characterGrid: document.getElementById('characterGrid'),
-        selectedCount: document.getElementById('selectedCount'),
-        startGameBtn: document.getElementById('startGameBtn'),
-        clearSelectionBtn: document.getElementById('clearSelectionBtn'),
-        shopBar: document.getElementById('shopBar'),
-        arenaViewport: document.getElementById('arenaViewport'),
-        panHint: document.getElementById('panHint'),
-        towerPopup: document.getElementById('towerPopup'),
-        towerInfo: document.getElementById('towerInfo'),
-        upgradeBtn: document.getElementById('upgradeBtn'),
-        sellBtn: document.getElementById('sellBtn'),
-        skipPrepBtn: document.getElementById('skipPrepBtn'),
-        zoomOutBtn: document.getElementById('zoomOutBtn'),
-        zoomInBtn: document.getElementById('zoomInBtn'),
-        zoomValue: document.getElementById('zoomValue'),
-        speedButtons: Array.from(document.querySelectorAll('.speedBtn')),
-        resultOverlay: document.getElementById('resultOverlay'),
-        resultTitle: document.getElementById('resultTitle'),
-        resultText: document.getElementById('resultText'),
-        restartBtn: document.getElementById('restartBtn')
-      };
+    const boardEl = document.getElementById("board");
+    const appShellEl = document.getElementById("appShell");
+    const difficultyBarEl = document.getElementById("difficultyBar");
+    const numberPadEl = document.getElementById("numberPad");
 
-      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
-      const sfx = {
-        ctx: null,
-        master: null,
-        hoverCooldownMs: 70,
-        lastHoverMs: 0,
-        lastUiClickMs: 0,
-        noiseBuffer: null,
-        shotLastByTower: new Map(),
-        unlocked: false
-      };
-      const SFX_VOLUME_BOOST = 3.2;
-      const camera = { x: 0, y: 0 };
-      let cameraZoom = 1;
-      const dragState = {
-        active: false,
-        moved: false,
-        pointerId: null,
-        startClientX: 0,
-        startClientY: 0,
-        startCameraX: 0,
-        startCameraY: 0
-      };
-      const touchPointers = new Map();
-      const pinchState = {
-        active: false,
-        startDistance: 0,
-        startZoom: 1
-      };
-      let gameSpeedMultiplier = 1;
-      let panHintTimeout = null;
+    const timeValueEl = document.getElementById("timeValue");
+    const mistakeValueEl = document.getElementById("mistakeValue");
+    const hintValueEl = document.getElementById("hintValue");
+    const bestValueEl = document.getElementById("bestValue");
 
-      function clamp(value, min, max) {
-        return Math.max(min, Math.min(max, value));
+    const restartBtn = document.getElementById("restartBtn");
+    const newGameBtn = document.getElementById("newGameBtn");
+    const noteBtn = document.getElementById("noteBtn");
+    const eraseBtn = document.getElementById("eraseBtn");
+    const hintBtn = document.getElementById("hintBtn");
+    const undoBtn = document.getElementById("undoBtn");
+    const redoBtn = document.getElementById("redoBtn");
+    const clearSelectBtn = document.getElementById("clearSelectBtn");
+
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    const loadingText = document.getElementById("loadingText");
+
+    const resultOverlay = document.getElementById("resultOverlay");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultText = document.getElementById("resultText");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+    const nextPuzzleBtn = document.getElementById("nextPuzzleBtn");
+
+    const cellElements = [];
+
+    const game = {
+      difficulty: "medium",
+      puzzle: [],
+      solution: [],
+      board: [],
+      notes: [],
+      fixed: new Set(),
+      selected: null,
+      noteMode: false,
+      mistakes: 0,
+      maxMistakes: 3,
+      maxHints: 3,
+      hintsUsed: 0,
+      elapsed: 0,
+      timerId: null,
+      timerStart: 0,
+      history: [],
+      future: [],
+      status: "idle",
+      wrongCells: new Set(),
+      flashInvalid: new Set(),
+      bestTimes: loadBestTimes()
+    };
+
+    function loadBestTimes() {
+      try {
+        const raw = localStorage.getItem(BEST_KEY);
+        if (!raw) {
+          return {};
+        }
+        const parsed = JSON.parse(raw);
+        return typeof parsed === "object" && parsed ? parsed : {};
+      } catch {
+        return {};
       }
+    }
 
-      function hashString(text) {
-        let hash = 0;
-        for (let i = 0; i < text.length; i += 1) {
-          hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
-        }
-        return Math.abs(hash);
+    function saveBestTimes() {
+      localStorage.setItem(BEST_KEY, JSON.stringify(game.bestTimes));
+    }
+
+    function cloneBoard(board) {
+      return board.map((row) => row.slice());
+    }
+
+    function range(n) {
+      return Array.from({ length: n }, (_, i) => i);
+    }
+
+    function shuffle(list) {
+      const arr = list.slice();
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
       }
+      return arr;
+    }
 
-      function ensureAudio() {
-        if (!AudioContextCtor) {
-          return null;
-        }
-        if (!sfx.ctx) {
-          sfx.ctx = new AudioContextCtor();
-          sfx.master = sfx.ctx.createGain();
-          sfx.master.gain.value = 1;
-          sfx.master.connect(sfx.ctx.destination);
-        }
-        return sfx.ctx;
+    function formatTime(totalSeconds) {
+      const sec = Math.max(0, totalSeconds | 0);
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      if (h > 0) {
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
       }
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
 
-      function runWhenAudioReady(playbackFn) {
-        const ctx = ensureAudio();
-        if (!ctx || !sfx.master) {
-          return;
+    function buildCellUI() {
+      boardEl.innerHTML = "";
+      cellElements.length = 0;
+      for (let r = 0; r < 9; r += 1) {
+        for (let c = 0; c < 9; c += 1) {
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "cell";
+          cell.dataset.r = String(r);
+          cell.dataset.c = String(c);
+          cell.dataset.i = String(r * 9 + c);
+          if (c === 2 || c === 5) {
+            cell.classList.add("block-right");
+          }
+          if (r === 2 || r === 5) {
+            cell.classList.add("block-bottom");
+          }
+          if (r === 8) {
+            cell.classList.add("row-end");
+          }
+
+          cell.addEventListener("click", () => {
+            if (game.status !== "playing") {
+              return;
+            }
+            selectCell(r, c);
+          });
+
+          cellElements.push(cell);
+          boardEl.appendChild(cell);
         }
-        if (ctx.state === 'running') {
-          playbackFn(ctx);
-          return;
-        }
-        ctx.resume().then(() => {
-          playbackFn(ctx);
-        }).catch(() => {});
       }
+    }
 
-      function unlockAudio() {
-        runWhenAudioReady((ctx) => {
-          if (sfx.unlocked) {
+    function buildNumberPad() {
+      numberPadEl.innerHTML = "";
+      for (let n = 1; n <= 9; n += 1) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = String(n);
+        btn.addEventListener("click", () => handleNumberInput(n));
+        numberPadEl.appendChild(btn);
+      }
+    }
+
+    function buildDifficultyBar() {
+      difficultyBarEl.innerHTML = "";
+      Object.entries(DIFFICULTIES).forEach(([key, value]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.diff = key;
+        btn.textContent = value.label;
+        btn.addEventListener("click", () => {
+          if (game.difficulty === key && game.status === "playing") {
             return;
           }
-          sfx.unlocked = true;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(320, ctx.currentTime);
-          gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.012, ctx.currentTime + 0.01);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.03);
-          osc.connect(gain);
-          gain.connect(sfx.master);
-          osc.start(ctx.currentTime);
-          osc.stop(ctx.currentTime + 0.03);
+          game.difficulty = key;
+          renderDifficultyBar();
+          startNewGame();
         });
-      }
-
-      function resumeAudioIfNeeded() {
-        const ctx = ensureAudio();
-        if (!ctx) {
-          return;
-        }
-        if (ctx.state === 'running') {
-          return;
-        }
-        ctx.resume().catch(() => {});
-      }
-
-      function playTone(config) {
-        runWhenAudioReady((ctx) => {
-          const now = ctx.currentTime + Math.max(0, config.delay || 0);
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          const wave = config.wave || 'sine';
-          const startFreq = config.startFreq || 440;
-          const endFreq = config.endFreq || startFreq;
-          const duration = clamp(config.duration || 0.08, 0.01, 0.6);
-          const volume = clamp((config.volume || 0.08) * SFX_VOLUME_BOOST, 0.0001, 1);
-
-          osc.type = wave;
-          osc.frequency.setValueAtTime(startFreq, now);
-          osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
-
-          gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.exponentialRampToValueAtTime(volume, now + duration * 0.22);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-          osc.connect(gain);
-          gain.connect(sfx.master);
-          osc.start(now);
-          osc.stop(now + duration + 0.01);
-        });
-      }
-
-      function getNoiseBuffer(ctx) {
-        if (sfx.noiseBuffer) {
-          return sfx.noiseBuffer;
-        }
-        const bufferSize = ctx.sampleRate * 0.6;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i += 1) {
-          data[i] = Math.random() * 2 - 1;
-        }
-        sfx.noiseBuffer = buffer;
-        return sfx.noiseBuffer;
-      }
-
-      function playNoiseBurst(config) {
-        runWhenAudioReady((ctx) => {
-          const now = ctx.currentTime + Math.max(0, config.delay || 0);
-          const duration = clamp(config.duration || 0.18, 0.03, 0.8);
-          const volume = clamp((config.volume || 0.06) * SFX_VOLUME_BOOST, 0.0001, 1);
-          const cutoff = clamp(config.cutoff || 900, 120, 3000);
-
-          const source = ctx.createBufferSource();
-          source.buffer = getNoiseBuffer(ctx);
-
-          const filter = ctx.createBiquadFilter();
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(cutoff, now);
-
-          const gain = ctx.createGain();
-          gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.exponentialRampToValueAtTime(volume, now + duration * 0.2);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-          source.connect(filter);
-          filter.connect(gain);
-          gain.connect(sfx.master);
-          source.start(now);
-          source.stop(now + duration + 0.01);
-        });
-      }
-
-      function playUiClickSfx() {
-        playTone({
-          wave: 'triangle',
-          startFreq: 760,
-          endFreq: 520,
-          duration: 0.045,
-          volume: 0.036
-        });
-      }
-
-      function playUiHoverSfx() {
-        const nowMs = performance.now();
-        if (nowMs - sfx.lastHoverMs < sfx.hoverCooldownMs) {
-          return;
-        }
-        sfx.lastHoverMs = nowMs;
-        playTone({
-          wave: 'sine',
-          startFreq: 640,
-          endFreq: 700,
-          duration: 0.03,
-          volume: 0.02
-        });
-      }
-
-      function playMoneySfx() {
-        playTone({
-          wave: 'triangle',
-          startFreq: 920,
-          endFreq: 1240,
-          duration: 0.05,
-          volume: 0.03
-        });
-      }
-
-      function getDefenderSoundProfile(def) {
-        const hash = hashString(def.id);
-        const waves = ['sine', 'triangle', 'square', 'sawtooth'];
-        return {
-          wave: waves[hash % waves.length],
-          baseFreq: 180 + (hash % 520),
-          accentFreq: 280 + ((hash >> 2) % 700),
-          volume: 0.018 + ((hash % 5) * 0.004)
-        };
-      }
-
-      function playTowerShotSfx(tower) {
-        const nowMs = performance.now();
-        const lastShot = sfx.shotLastByTower.get(tower.id) || 0;
-        if (nowMs - lastShot < 55) {
-          return;
-        }
-        sfx.shotLastByTower.set(tower.id, nowMs);
-
-        const profile = getDefenderSoundProfile(tower.def);
-        const type = tower.def.attackType;
-        const base = profile.baseFreq;
-        const accent = profile.accentFreq;
-        const shotVol = clamp(profile.volume + 0.01, 0.02, 0.085);
-        const pitchJitter = 0.96 + (hashString(tower.def.id + tower.level) % 9) * 0.01;
-
-        if (type === 'single') {
-          // Rifle-like: sharp click + body + short tail.
-          playNoiseBurst({ duration: 0.024, volume: 0.018, cutoff: 2500 });
-          playTone({
-            wave: 'square',
-            startFreq: accent * 1.16 * pitchJitter,
-            endFreq: base * 0.82 * pitchJitter,
-            duration: 0.052,
-            volume: shotVol
-          });
-          playTone({
-            wave: 'triangle',
-            startFreq: base * 0.9,
-            endFreq: base * 0.52,
-            duration: 0.07,
-            delay: 0.015,
-            volume: shotVol * 0.38
-          });
-          return;
-        }
-
-        if (type === 'burst') {
-          // Burst/shotgun-like: three compact transients.
-          for (let i = 0; i < 3; i += 1) {
-            const delay = i * 0.024;
-            const pitchDrop = 1 - i * 0.06;
-            playNoiseBurst({
-              delay,
-              duration: 0.02,
-              volume: shotVol * (0.72 - i * 0.12),
-              cutoff: 2200
-            });
-            playTone({
-              wave: 'square',
-              delay,
-              startFreq: accent * 1.08 * pitchDrop * pitchJitter,
-              endFreq: base * 0.78 * pitchDrop,
-              duration: 0.04,
-              volume: shotVol * (0.95 - i * 0.12)
-            });
-          }
-          return;
-        }
-
-        if (type === 'mortar' || type === 'splash') {
-          // Cannon launch: low thump + dusty blast layer.
-          playTone({
-            wave: 'sine',
-            startFreq: Math.max(78, base * 0.44),
-            endFreq: Math.max(42, base * 0.23),
-            duration: 0.13,
-            volume: shotVol * 1.25
-          });
-          playNoiseBurst({
-            delay: 0.005,
-            duration: 0.085,
-            volume: shotVol * 0.74,
-            cutoff: 1200
-          });
-          playTone({
-            wave: 'triangle',
-            delay: 0.02,
-            startFreq: base * 0.7,
-            endFreq: base * 0.34,
-            duration: 0.12,
-            volume: shotVol * 0.42
-          });
-          return;
-        }
-
-        if (type === 'burn_splash') {
-          // Flame throw: hot pop + sizzling hiss.
-          playTone({
-            wave: 'sawtooth',
-            startFreq: accent * 0.86,
-            endFreq: base * 0.46,
-            duration: 0.09,
-            volume: shotVol * 0.92
-          });
-          playNoiseBurst({
-            delay: 0.01,
-            duration: 0.07,
-            volume: shotVol * 0.66,
-            cutoff: 1700
-          });
-          return;
-        }
-
-        if (type === 'chain') {
-          // Electric zap: high crackle pulses.
-          for (let i = 0; i < 2; i += 1) {
-            const delay = i * 0.017;
-            playTone({
-              wave: 'triangle',
-              delay,
-              startFreq: accent * (1.35 - i * 0.09),
-              endFreq: accent * (0.98 - i * 0.08),
-              duration: 0.032,
-              volume: shotVol * 0.86
-            });
-            playNoiseBurst({
-              delay,
-              duration: 0.022,
-              volume: shotVol * 0.44,
-              cutoff: 2600
-            });
-          }
-          return;
-        }
-
-        if (type === 'pierce') {
-          // Rail shot: metallic snap + piercing ring.
-          playNoiseBurst({
-            duration: 0.02,
-            volume: shotVol * 0.56,
-            cutoff: 2800
-          });
-          playTone({
-            wave: 'square',
-            startFreq: accent * 1.46,
-            endFreq: base * 1.02,
-            duration: 0.045,
-            volume: shotVol * 1.12
-          });
-          playTone({
-            wave: 'sine',
-            delay: 0.012,
-            startFreq: accent * 0.92,
-            endFreq: base * 0.68,
-            duration: 0.09,
-            volume: shotVol * 0.36
-          });
-          return;
-        }
-
-        if (type === 'slow') {
-          // Frost pulse: soft whoosh upward.
-          playTone({
-            wave: 'sine',
-            startFreq: base * 0.55,
-            endFreq: base * 0.92,
-            duration: 0.075,
-            volume: shotVol * 0.72
-          });
-          playNoiseBurst({
-            delay: 0.012,
-            duration: 0.036,
-            volume: shotVol * 0.32,
-            cutoff: 1900
-          });
-          return;
-        }
-
-        if (type === 'poison') {
-          // Toxic dart: wet spit style.
-          playTone({
-            wave: 'square',
-            startFreq: base * 0.84,
-            endFreq: base * 0.48,
-            duration: 0.07,
-            volume: shotVol * 0.78
-          });
-          playNoiseBurst({
-            delay: 0.008,
-            duration: 0.04,
-            volume: shotVol * 0.34,
-            cutoff: 1500
-          });
-          return;
-        }
-
-        // Fallback for unknown/custom types.
-        playTone({
-          wave: profile.wave,
-          startFreq: base * pitchJitter,
-          endFreq: base * 0.74,
-          duration: 0.06,
-          volume: shotVol
-        });
-      }
-
-      function playExplosionSfx(radius) {
-        const intensity = clamp((radius || 90) / 120, 0.65, 1.35);
-        playNoiseBurst({
-          duration: 0.14 * intensity,
-          volume: 0.038 * intensity,
-          cutoff: 1100 - intensity * 330
-        });
-        playTone({
-          wave: 'sine',
-          startFreq: 145 * intensity,
-          endFreq: 62,
-          duration: 0.12 * intensity,
-          volume: 0.026 * intensity
-        });
-      }
-
-      function bindButtonSfx(button) {
-        if (!button) {
-          return;
-        }
-        button.addEventListener('mouseenter', () => {
-          playUiHoverSfx();
-        });
-        button.addEventListener('pointerdown', () => {
-          const nowMs = performance.now();
-          if (nowMs - sfx.lastUiClickMs < 28) {
-            return;
-          }
-          sfx.lastUiClickMs = nowMs;
-          unlockAudio();
-          playUiClickSfx();
-        });
-        button.addEventListener('click', (event) => {
-          if (event.detail !== 0) {
-            return;
-          }
-          unlockAudio();
-          playUiClickSfx();
-        });
-      }
-
-      const unlockAudioEvents = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'];
-      for (let i = 0; i < unlockAudioEvents.length; i += 1) {
-        const eventName = unlockAudioEvents[i];
-        const usePassive = eventName !== 'keydown';
-        document.addEventListener(eventName, unlockAudio, usePassive ? { passive: true } : undefined);
-      }
-
-      window.addEventListener('focus', resumeAudioIfNeeded);
-      window.addEventListener('pageshow', resumeAudioIfNeeded);
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          resumeAudioIfNeeded();
-        }
+        difficultyBarEl.appendChild(btn);
       });
+      renderDifficultyBar();
+    }
 
-      const MAP_CATALOG = [
-        {
-          id: 'sunny_meadow',
-          name: 'Sunny Meadow',
-          level: 1,
-          difficulty: 'Easy',
-          zombieMultiplier: 1.0,
-          bossColor: '#ff3b3b',
-          theme: 'Cheerful',
-          description: 'A long serpentine route with many turns across bright fields.',
-          path: [
-            { x: -20, y: 60 },
-            { x: 120, y: 60 },
-            { x: 120, y: 500 },
-            { x: 260, y: 500 },
-            { x: 260, y: 120 },
-            { x: 420, y: 120 },
-            { x: 420, y: 440 },
-            { x: 580, y: 440 },
-            { x: 580, y: 80 },
-            { x: 740, y: 80 },
-            { x: 740, y: 360 },
-            { x: 860, y: 360 },
-            { x: 860, y: 180 },
-            { x: 980, y: 180 }
-          ],
-          palette: {
-            bgTop: '#2d5f3e',
-            bgBottom: '#193326',
-            speckle: 'rgba(255,255,255,0.05)',
-            pathOuter: '#6a5e44',
-            pathInner: '#9b8a60',
-            pathDash: 'rgba(255,242,207,0.25)',
-            baseCore: '#3d7ed0',
-            baseText: '#e3f2ff',
-            spawnCore: '#65b764',
-            spawnText: '#f0fff0'
-          }
-        },
-        {
-          id: 'canyon_crossing',
-          name: 'Canyon Crossing',
-          level: 2,
-          difficulty: 'Normal',
-          zombieMultiplier: 1.1,
-          bossColor: '#c42b2b',
-          theme: 'Adventure',
-          description: 'Fortified switchbacks with several tight choke points.',
-          path: [
-            { x: -20, y: 140 },
-            { x: 140, y: 140 },
-            { x: 140, y: 420 },
-            { x: 320, y: 420 },
-            { x: 320, y: 170 },
-            { x: 500, y: 170 },
-            { x: 500, y: 470 },
-            { x: 700, y: 470 },
-            { x: 700, y: 220 },
-            { x: 860, y: 220 },
-            { x: 860, y: 520 },
-            { x: 980, y: 520 }
-          ],
-          palette: {
-            bgTop: '#4a3a2f',
-            bgBottom: '#2b201a',
-            speckle: 'rgba(250,220,170,0.05)',
-            pathOuter: '#5c4b34',
-            pathInner: '#8d754f',
-            pathDash: 'rgba(255,234,194,0.23)',
-            baseCore: '#6c88c9',
-            baseText: '#e9f1ff',
-            spawnCore: '#7aa45c',
-            spawnText: '#f2ffe8'
-          }
-        },
-        {
-          id: 'toxic_marsh',
-          name: 'Toxic Marsh',
-          level: 3,
-          difficulty: 'Medium',
-          zombieMultiplier: 1.2,
-          bossColor: '#a52121',
-          theme: 'Mutant Swamp',
-          description: 'Layered zig-zag route with tight tower zones and split pressure.',
-          path: [
-            { x: -20, y: 470 },
-            { x: 180, y: 470 },
-            { x: 180, y: 310 },
-            { x: 430, y: 310 },
-            { x: 430, y: 430 },
-            { x: 670, y: 430 },
-            { x: 670, y: 190 },
-            { x: 890, y: 190 },
-            { x: 890, y: 60 },
-            { x: 980, y: 60 }
-          ],
-          palette: {
-            bgTop: '#2f4b2b',
-            bgBottom: '#1c2d1a',
-            speckle: 'rgba(176,255,158,0.06)',
-            pathOuter: '#4f5532',
-            pathInner: '#7e8b50',
-            pathDash: 'rgba(233,255,195,0.22)',
-            baseCore: '#7f89d9',
-            baseText: '#edf0ff',
-            spawnCore: '#7ac85f',
-            spawnText: '#edffea'
-          }
-        },
-        {
-          id: 'ashen_fortress',
-          name: 'Ashen Fortress',
-          level: 4,
-          difficulty: 'Hard',
-          zombieMultiplier: 1.3,
-          bossColor: '#861717',
-          theme: 'War Ruins',
-          description: 'A balanced looping path with medium spacing and clear sight lines.',
-          path: [
-            { x: -20, y: 80 },
-            { x: 220, y: 80 },
-            { x: 220, y: 230 },
-            { x: 540, y: 230 },
-            { x: 540, y: 120 },
-            { x: 840, y: 120 },
-            { x: 840, y: 380 },
-            { x: 360, y: 380 },
-            { x: 360, y: 500 },
-            { x: 980, y: 500 }
-          ],
-          palette: {
-            bgTop: '#3a3a3f',
-            bgBottom: '#202126',
-            speckle: 'rgba(240,240,255,0.04)',
-            pathOuter: '#4c4540',
-            pathInner: '#6d625b',
-            pathDash: 'rgba(239,230,220,0.19)',
-            baseCore: '#8c78c8',
-            baseText: '#f0e9ff',
-            spawnCore: '#75806d',
-            spawnText: '#f5f8ef'
-          }
-        },
-        {
-          id: 'inferno_rift',
-          name: 'Inferno Rift',
-          level: 5,
-          difficulty: 'Insane',
-          zombieMultiplier: 1.4,
-          bossColor: '#660f0f',
-          theme: 'Hellfire',
-          description: 'Wide lanes and gentler turns despite the hellish atmosphere.',
-          path: [
-            { x: -20, y: 100 },
-            { x: 230, y: 100 },
-            { x: 230, y: 220 },
-            { x: 500, y: 220 },
-            { x: 500, y: 330 },
-            { x: 760, y: 330 },
-            { x: 760, y: 460 },
-            { x: 980, y: 460 }
-          ],
-          palette: {
-            bgTop: '#3c1515',
-            bgBottom: '#1f0d0d',
-            speckle: 'rgba(255,140,90,0.05)',
-            pathOuter: '#5a2f2f',
-            pathInner: '#8d4a3a',
-            pathDash: 'rgba(255,210,160,0.2)',
-            baseCore: '#9a6cff',
-            baseText: '#f7eaff',
-            spawnCore: '#cd5a41',
-            spawnText: '#fff0ea'
-          }
-        }
-      ];
+    function renderDifficultyBar() {
+      const buttons = difficultyBarEl.querySelectorAll("button");
+      buttons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.diff === game.difficulty);
+      });
+    }
 
-      const mapById = new Map(MAP_CATALOG.map((map) => [map.id, map]));
-      function createDefaultProfile() {
+    function clearTimer() {
+      if (game.timerId) {
+        clearInterval(game.timerId);
+      }
+      game.timerId = null;
+    }
+
+    function startTimer() {
+      clearTimer();
+      game.timerStart = Date.now() - game.elapsed * 1000;
+      game.timerId = setInterval(() => {
+        game.elapsed = Math.floor((Date.now() - game.timerStart) / 1000);
+        renderStats();
+      }, 1000);
+    }
+
+    function setLoading(isVisible, message = "Generating puzzle...") {
+      loadingOverlay.classList.toggle("hidden", !isVisible);
+      loadingText.textContent = message;
+    }
+
+    let fitRaf = null;
+    let fitObserver = null;
+
+    function getViewportSize() {
+      const vv = window.visualViewport;
+      if (!vv) {
         return {
-          level: 1,
-          exp: 0,
-          money: 0,
-          mapStats: {}
+          width: window.innerWidth,
+          height: window.innerHeight
         };
       }
-
-      function loadProfile() {
-        const fallback = createDefaultProfile();
-        try {
-          const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
-          if (!raw) {
-            return fallback;
-          }
-          const parsed = JSON.parse(raw);
-          if (!parsed || typeof parsed !== 'object') {
-            return fallback;
-          }
-          const level = Math.max(1, Math.floor(Number(parsed.level) || 1));
-          const exp = Math.max(0, Math.floor(Number(parsed.exp) || 0));
-          const money = Math.max(0, Math.floor(Number(parsed.money) || 0));
-          const mapStats = {};
-          if (parsed.mapStats && typeof parsed.mapStats === 'object') {
-            const ids = Object.keys(parsed.mapStats);
-            for (let i = 0; i < ids.length; i += 1) {
-              const mapId = ids[i];
-              const source = parsed.mapStats[mapId] || {};
-              mapStats[mapId] = {
-                plays: Math.max(0, Math.floor(Number(source.plays) || 0)),
-                wins: Math.max(0, Math.floor(Number(source.wins) || 0)),
-                losses: Math.max(0, Math.floor(Number(source.losses) || 0))
-              };
-            }
-          }
-          return { level, exp, money, mapStats };
-        } catch (error) {
-          return fallback;
-        }
-      }
-
-      function saveProfile() {
-        try {
-          localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(playerProfile));
-        } catch (error) {
-          // Ignore storage failures in restricted environments.
-        }
-      }
-
-      function expNeededForLevel(level) {
-        return 100 + (Math.max(1, level) - 1) * 55;
-      }
-
-      function getWinRewardsForMapLevel(mapLevel) {
-        const level = Math.max(1, Math.min(5, mapLevel));
-        return {
-          exp: 18 + level * 12,
-          money: 24 + level * 26
-        };
-      }
-
-      function ensureMapProfileStat(mapId) {
-        if (!playerProfile.mapStats[mapId]) {
-          playerProfile.mapStats[mapId] = { plays: 0, wins: 0, losses: 0 };
-        }
-        return playerProfile.mapStats[mapId];
-      }
-
-      function recordMapPlay(mapId) {
-        const stat = ensureMapProfileStat(mapId);
-        stat.plays += 1;
-        saveProfile();
-      }
-
-      function recordMapWin(mapId) {
-        const stat = ensureMapProfileStat(mapId);
-        stat.wins += 1;
-        saveProfile();
-      }
-
-      function recordMapLoss(mapId) {
-        const stat = ensureMapProfileStat(mapId);
-        stat.losses += 1;
-        saveProfile();
-      }
-
-      function grantWinRewards(mapLevel) {
-        const rewards = getWinRewardsForMapLevel(mapLevel);
-        playerProfile.exp += rewards.exp;
-        playerProfile.money += rewards.money;
-        let levelUps = 0;
-        let needed = expNeededForLevel(playerProfile.level);
-        while (playerProfile.exp >= needed) {
-          playerProfile.exp -= needed;
-          playerProfile.level += 1;
-          levelUps += 1;
-          needed = expNeededForLevel(playerProfile.level);
-        }
-        saveProfile();
-        renderProfileBar();
-        return {
-          exp: rewards.exp,
-          money: rewards.money,
-          levelUps
-        };
-      }
-
-      let playerProfile = loadProfile();
-      for (let i = 0; i < MAP_CATALOG.length; i += 1) {
-        ensureMapProfileStat(MAP_CATALOG[i].id);
-      }
-      saveProfile();
-
-      let selectedMapId = MAP_CATALOG[0].id;
-      let activeMap = MAP_CATALOG[0];
-      let pathWaypoints = activeMap.path.map((point) => ({
-        x: point.x + MAP_OFFSET_X,
-        y: point.y + MAP_OFFSET_Y
-      }));
-      let basePoint = pathWaypoints[pathWaypoints.length - 1];
-      let mapPathLength = 0;
-
-      function getPathTotalLength(points) {
-        let total = 0;
-        for (let i = 0; i < points.length - 1; i += 1) {
-          total += Math.hypot(points[i + 1].x - points[i].x, points[i + 1].y - points[i].y);
-        }
-        return total;
-      }
-
-      function getBossProfile(mapLevel) {
-        const level = Math.max(1, Math.min(5, mapLevel));
-        const sourceMap = MAP_CATALOG[level - 1];
-        return {
-          mapLevel: level,
-          name: 'Final Boss L' + level,
-          hp: level * 100,
-          speed: Math.max(17, 25 - level),
-          reward: 45 * level,
-          baseDamage: 6 + level * 2,
-          size: 34,
-          color: sourceMap.bossColor
-        };
-      }
-
-      function getStartMoneyForMapLevel(mapLevel) {
-        const level = Math.max(1, Math.min(5, mapLevel));
-        return 100 + (level - 1) * 50;
-      }
-
-      function getWaveCompletionBonus(wave) {
-        if (wave <= 10) {
-          return 10;
-        }
-        if (wave <= 20) {
-          return 15;
-        }
-        if (wave <= 30) {
-          return 20;
-        }
-        return 25;
-      }
-
-      function createBossQueueEntry(mapLevel, tag) {
-        return {
-          kind: 'boss',
-          mapLevel,
-          tag
-        };
-      }
-
-      function getShiftedPath(path) {
-        return path.map((point) => ({
-          x: point.x + MAP_OFFSET_X,
-          y: point.y + MAP_OFFSET_Y
-        }));
-      }
-
-      function setActiveMap(mapId) {
-        const map = mapById.get(mapId) || MAP_CATALOG[0];
-        selectedMapId = map.id;
-        activeMap = map;
-        pathWaypoints = getShiftedPath(activeMap.path);
-        basePoint = pathWaypoints[pathWaypoints.length - 1];
-        mapPathLength = getPathTotalLength(pathWaypoints);
-      }
-
-      function getViewportWorldWidth() {
-        return canvas.width / cameraZoom;
-      }
-
-      function getViewportWorldHeight() {
-        return canvas.height / cameraZoom;
-      }
-
-      function getCameraBoundsX() {
-        const viewWidth = getViewportWorldWidth();
-        if (WORLD_WIDTH <= viewWidth) {
-          const centeredX = (WORLD_WIDTH - viewWidth) / 2;
-          return { min: centeredX, max: centeredX };
-        }
-        return { min: 0, max: WORLD_WIDTH - viewWidth };
-      }
-
-      function getCameraBoundsY() {
-        const viewHeight = getViewportWorldHeight();
-        if (WORLD_HEIGHT <= viewHeight) {
-          const centeredY = (WORLD_HEIGHT - viewHeight) / 2;
-          return { min: centeredY, max: centeredY };
-        }
-        return { min: 0, max: WORLD_HEIGHT - viewHeight };
-      }
-
-      function clampCameraToWorld() {
-        const xBounds = getCameraBoundsX();
-        const yBounds = getCameraBoundsY();
-        camera.x = clamp(camera.x, xBounds.min, xBounds.max);
-        camera.y = clamp(camera.y, yBounds.min, yBounds.max);
-      }
-
-      function getPathBounds(points) {
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-        for (let i = 0; i < points.length; i += 1) {
-          const point = points[i];
-          minX = Math.min(minX, point.x);
-          maxX = Math.max(maxX, point.x);
-          minY = Math.min(minY, point.y);
-          maxY = Math.max(maxY, point.y);
-        }
-        return { minX, maxX, minY, maxY };
-      }
-
-      function focusCameraOnPath() {
-        const bounds = getPathBounds(pathWaypoints);
-        camera.x = ((bounds.minX + bounds.maxX) / 2) - getViewportWorldWidth() / 2;
-        camera.y = ((bounds.minY + bounds.maxY) / 2) - getViewportWorldHeight() / 2;
-        clampCameraToWorld();
-      }
-
-      function resizeArenaCanvas() {
-        if (!ui.arenaViewport || ui.gameScreen.classList.contains('hidden')) {
-          return;
-        }
-        const rect = ui.arenaViewport.getBoundingClientRect();
-        const width = Math.max(320, Math.floor(rect.width));
-        const height = Math.max(260, Math.floor(rect.height));
-        if (canvas.width !== width || canvas.height !== height) {
-          canvas.width = width;
-          canvas.height = height;
-        }
-        clampCameraToWorld();
-        renderZoomControls();
-      }
-
-      function renderZoomControls() {
-        if (!ui.zoomValue) {
-          return;
-        }
-        ui.zoomValue.textContent = Math.round(cameraZoom * 100) + '%';
-        if (ui.zoomOutBtn) {
-          ui.zoomOutBtn.disabled = cameraZoom <= MIN_CAMERA_ZOOM + 0.001;
-        }
-        if (ui.zoomInBtn) {
-          ui.zoomInBtn.disabled = cameraZoom >= MAX_CAMERA_ZOOM - 0.001;
-        }
-      }
-
-      function setCameraZoom(nextZoom, anchorClientX, anchorClientY) {
-        const prevZoom = cameraZoom;
-        const zoom = clamp(nextZoom, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
-        if (Math.abs(zoom - prevZoom) < 0.001) {
-          renderZoomControls();
-          return;
-        }
-
-        const rect = canvas.getBoundingClientRect();
-        let viewX = canvas.width * 0.5;
-        let viewY = canvas.height * 0.5;
-        if (Number.isFinite(anchorClientX) && Number.isFinite(anchorClientY) && rect.width > 0 && rect.height > 0) {
-          const scaleX = canvas.width / rect.width;
-          const scaleY = canvas.height / rect.height;
-          viewX = (anchorClientX - rect.left) * scaleX;
-          viewY = (anchorClientY - rect.top) * scaleY;
-        }
-
-        const worldX = camera.x + viewX / prevZoom;
-        const worldY = camera.y + viewY / prevZoom;
-        cameraZoom = zoom;
-        camera.x = worldX - viewX / cameraZoom;
-        camera.y = worldY - viewY / cameraZoom;
-        clampCameraToWorld();
-        renderZoomControls();
-      }
-
-      function getWorldPointFromClient(clientX, clientY) {
-        const rect = canvas.getBoundingClientRect();
-        if (rect.width <= 0 || rect.height <= 0) {
-          return null;
-        }
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const viewX = (clientX - rect.left) * scaleX;
-        const viewY = (clientY - rect.top) * scaleY;
-        return {
-          x: camera.x + viewX / cameraZoom,
-          y: camera.y + viewY / cameraZoom
-        };
-      }
-
-      const ZOMBIE_TYPES = {
-        weak: {
-          name: 'Weak Zombie',
-          hp: 1,
-          speed: 34,
-          reward: 2,
-          baseDamage: 1,
-          size: 11,
-          growth: 0.06,
-          color: '#b9d281'
-        },
-        normal: {
-          name: 'Normal Zombie',
-          hp: 5,
-          speed: 43,
-          reward: 5,
-          baseDamage: 3,
-          size: 12,
-          growth: 0.08,
-          color: '#d5ba88'
-        },
-        fast: {
-          name: 'Fast Zombie',
-          hp: 3,
-          speed: 70,
-          reward: 4,
-          baseDamage: 2,
-          size: 10,
-          growth: 0.07,
-          color: '#f4be6d'
-        },
-        tank: {
-          name: 'Tank Zombie',
-          hp: 15,
-          speed: 29,
-          reward: 15,
-          baseDamage: 5,
-          size: 15,
-          growth: 0.1,
-          color: '#d5867c'
-        },
-        giant: {
-          name: 'Giant Zombie',
-          hp: 25,
-          speed: 23,
-          reward: 30,
-          baseDamage: 10,
-          size: 19,
-          growth: 0.12,
-          color: '#b16696'
-        }
+      return {
+        width: Math.min(window.innerWidth, vv.width),
+        height: Math.min(window.innerHeight, vv.height)
       };
+    }
 
-      const TOWER_CATALOG = [
-        {
-          id: 'rookie_guard',
-          name: 'Rookie Guard',
-          cost: 75,
-          damage: 1,
-          range: 95,
-          recoil: 1000,
-          attackType: 'single',
-          color: '#6fb658',
-          description: 'Cheapest option, good for holding early waves.'
-        },
-        {
-          id: 'archer',
-          name: 'Archer',
-          cost: 100,
-          damage: 2,
-          range: 185,
-          recoil: 1500,
-          attackType: 'single',
-          color: '#89c064',
-          description: 'Long range with a stable fire rate.'
-        },
-        {
-          id: 'fire_thrower',
-          name: 'Fire Thrower',
-          cost: 180,
-          damage: 1.2,
-          range: 105,
-          recoil: 1000,
-          attackType: 'burn_splash',
-          burnDps: 0.8,
-          dotDuration: 2000,
-          area: 85,
-          color: '#f0824f',
-          description: 'Area fire attack with burn damage.'
-        },
-        {
-          id: 'sniper',
-          name: 'Sniper',
-          cost: 300,
-          damage: 5,
-          range: 340,
-          recoil: 4000,
-          attackType: 'single',
-          color: '#a8b5de',
-          description: 'High damage, slow recoil.'
-        },
-        {
-          id: 'minigun_operator',
-          name: 'Minigun Operator',
-          cost: 500,
-          damage: 1.35,
-          range: 175,
-          recoil: 160,
-          attackType: 'single',
-          color: '#e1be6b',
-          description: 'Very high attack speed.'
-        },
-        {
-          id: 'shotgunner',
-          name: 'Shotgunner',
-          cost: 200,
-          damage: 3,
-          range: 110,
-          recoil: 4000,
-          attackType: 'burst',
-          color: '#d3a47d',
-          description: 'Shoots multiple nearby targets.'
-        },
-        {
-          id: 'frost_mage',
-          name: 'Frost Mage',
-          cost: 150,
-          damage: 1,
-          range: 160,
-          recoil: 820,
-          attackType: 'slow',
-          slowFactor: 0.72,
-          slowDuration: 1600,
-          color: '#8cdaf2',
-          description: 'Slows zombies it hits.'
-        },
-        {
-          id: 'bomber',
-          name: 'Bomber',
-          cost: 210,
-          damage: 4.3,
-          range: 150,
-          recoil: 2160,
-          attackType: 'splash',
-          area: 92,
-          color: '#d9785f',
-          description: 'Area blast for clustered zombies.'
-        },
-        {
-          id: 'tesla_coil',
-          name: 'Tesla Coil',
-          cost: 260,
-          damage: 2.8,
-          range: 170,
-          recoil: 2000,
-          attackType: 'chain',
-          chainCount: 3,
-          jumpRange: 95,
-          color: '#9bb1f0',
-          description: 'Chain lightning between zombies.'
-        },
-        {
-          id: 'poison_druid',
-          name: 'Poison Druid',
-          cost: 190,
-          damage: 1.1,
-          range: 152,
-          recoil: 2000,
-          attackType: 'poison',
-          poisonDps: 1.5,
-          dotDuration: 2800,
-          color: '#91d785',
-          description: 'Poison damage over time.'
-        },
-        {
-          id: 'cannonner',
-          name: 'Cannonner',
-          cost: 240,
-          damage: 5,
-          range: 176,
-          recoil: 4000,
-          attackType: 'splash',
-          area: 98,
-          color: '#bb8d78',
-          description: 'Strong cannon for crowd control.'
-        },
-        {
-          id: 'spearman',
-          name: 'Spearman',
-          cost: 120,
-          damage: 1,
-          range: 95,
-          recoil: 2000,
-          attackType: 'burst',
-          color: '#b2d16d',
-          description: 'Agile short-range defender.'
-        },
-        {
-          id: 'laser_drone',
-          name: 'Laser Drone',
-          cost: 280,
-          damage: 2,
-          range: 212,
-          recoil: 520,
-          attackType: 'single',
-          color: '#7ad2e2',
-          description: 'Steady attacks with fast recoil.'
-        },
-        {
-          id: 'mortar',
-          name: 'Mortar',
-          cost: 360,
-          damage: 9,
-          range: 270,
-          recoil: 4900,
-          attackType: 'mortar',
-          area: 132,
-          color: '#b99f83',
-          description: 'Slow artillery with a large blast radius.'
-        },
-        {
-          id: 'engineer',
-          name: 'Engineer',
-          cost: 200,
-          damage: 1.6,
-          range: 140,
-          recoil: 1000,
-          attackType: 'single',
-          color: '#dfb674',
-          description: 'Cost-efficient pick for mid-game transition.'
-        },
-        {
-          id: 'ranger_captain',
-          name: 'Ranger Captain',
-          cost: 220,
-          damage: 3,
-          range: 214,
-          recoil: 2000,
-          attackType: 'single',
-          color: '#77c489',
-          description: 'Good range with consistent damage.'
-        },
-        {
-          id: 'plasma_gunner',
-          name: 'Plasma Gunner',
-          cost: 340,
-          damage: 4.2,
-          range: 198,
-          recoil: 1000,
-          attackType: 'splash',
-          area: 74,
-          color: '#f493a9',
-          description: 'Fast plasma shots with small splash.'
-        },
-        {
-          id: 'blade_dancer',
-          name: 'Blade Dancer',
-          cost: 150,
-          damage: 2.5,
-          range: 80,
-          recoil: 2000,
-          attackType: 'burst',
-          color: '#f1a971',
-          description: 'Fast attacker for very close range.'
-        },
-        {
-          id: 'railgunner',
-          name: 'Railgunner',
-          cost: 420,
-          damage: 12,
-          range: 360,
-          recoil: 1700,
-          attackType: 'pierce',
-          color: '#a9bef1',
-          description: 'Piercing shots through multiple zombies.'
-        },
-        {
-          id: 'volcano_shaman',
-          name: 'Volcano Shaman',
-          cost: 460,
-          damage: 2.7,
-          range: 180,
-          recoil: 540,
-          attackType: 'burn_splash',
-          burnDps: 1.6,
-          dotDuration: 2600,
-          area: 118,
-          color: '#ef7e54',
-          description: 'Strong AoE burn for late game.'
-        }
-      ];
+    function fitAppToViewport() {
+      const margin = 8;
+      appShellEl.style.transform = "scale(1)";
+      const rect = appShellEl.getBoundingClientRect();
+      const viewport = getViewportSize();
+      const availableWidth = Math.max(0, viewport.width - margin * 2);
+      const availableHeight = Math.max(0, viewport.height - margin * 2);
+      const scale = Math.min(availableWidth / rect.width, availableHeight / rect.height, 1);
+      appShellEl.style.transform = `scale(${Math.max(scale, 0.01)})`;
+    }
 
-      const towerById = new Map(TOWER_CATALOG.map((tower) => [tower.id, tower]));
-
-      function createInitialState() {
-        return {
-          phase: 'select',
-          mapId: selectedMapId,
-          wave: 0,
-          totalWaves: TOTAL_WAVES,
-          money: START_MONEY,
-          baseHp: START_BASE_HP,
-          status: 'Select a map + 5 characters',
-          notice: '',
-          noticeTimer: 0,
-          selectedTowerIds: [],
-          activePlaceId: null,
-          selectedTowerId: null,
-          towers: [],
-          towerByCell: new Map(),
-          zombies: [],
-          shells: [],
-          tracers: [],
-          explosions: [],
-          spawnQueue: [],
-          spawnTimer: 0,
-          prepTimer: 0,
-          waveSpawnTotal: 0,
-          waveSpawned: 0,
-          hoverCell: null,
-          kills: 0,
-          gameSpeed: gameSpeedMultiplier,
-          baseHitShakeTimer: 0,
-          baseHitShakePower: 0,
-          baseHitFlashTimer: 0,
-          baseHitFlashPower: 0,
-          baseHitPulseTimer: 0,
-          baseHitPulsePower: 0,
-          pathArrowHintTimer: 0,
-          shopDirty: true,
-          towerInfoDirty: true
-        };
+    function queueViewportFit() {
+      if (fitRaf) {
+        return;
       }
+      fitRaf = requestAnimationFrame(() => {
+        fitRaf = null;
+        fitAppToViewport();
+      });
+    }
 
-      const selectedPool = new Set();
-      let state = createInitialState();
-      let nextTowerId = 1;
-      let nextZombieId = 1;
+    function snapshot() {
+      return {
+        board: cloneBoard(game.board),
+        notes: game.notes.map((set) => Array.from(set)),
+        selected: game.selected ? { ...game.selected } : null,
+        noteMode: game.noteMode,
+        mistakes: game.mistakes,
+        hintsUsed: game.hintsUsed,
+        wrongCells: Array.from(game.wrongCells),
+        elapsed: game.elapsed
+      };
+    }
 
-      function showNotice(message) {
-        state.notice = message;
-        state.noticeTimer = 1600;
+    function restoreState(state) {
+      game.board = cloneBoard(state.board);
+      game.notes = state.notes.map((list) => new Set(list));
+      game.selected = state.selected ? { ...state.selected } : null;
+      game.noteMode = state.noteMode;
+      game.mistakes = state.mistakes;
+      game.hintsUsed = state.hintsUsed;
+      game.wrongCells = new Set(state.wrongCells || []);
+      game.elapsed = state.elapsed;
+      game.timerStart = Date.now() - game.elapsed * 1000;
+      renderAll();
+    }
+
+    function pushHistory() {
+      game.history.push(snapshot());
+      if (game.history.length > 300) {
+        game.history.shift();
       }
+      game.future.length = 0;
+    }
 
-      function setGameSpeed(multiplier) {
-        const speed = Math.round(clamp(multiplier, 1, 3));
-        gameSpeedMultiplier = speed;
-        state.gameSpeed = speed;
-        renderSpeedButtons();
+    function undoMove() {
+      if (!game.history.length || game.status !== "playing") {
+        return;
       }
+      game.future.push(snapshot());
+      const prev = game.history.pop();
+      restoreState(prev);
+    }
 
-      function renderSpeedButtons() {
-        for (let i = 0; i < ui.speedButtons.length; i += 1) {
-          const button = ui.speedButtons[i];
-          const speed = Number(button.dataset.speed || '1');
-          button.classList.toggle('active', speed === gameSpeedMultiplier);
-        }
+    function redoMove() {
+      if (!game.future.length || game.status !== "playing") {
+        return;
       }
+      game.history.push(snapshot());
+      const next = game.future.pop();
+      restoreState(next);
+    }
 
-      function showPanHintPopup() {
-        if (!ui.panHint) {
-          return;
-        }
-        ui.panHint.classList.remove('show');
-        void ui.panHint.offsetWidth;
-        ui.panHint.classList.add('show');
-        if (panHintTimeout) {
-          clearTimeout(panHintTimeout);
-        }
-        panHintTimeout = setTimeout(() => {
-          ui.panHint.classList.remove('show');
-        }, 1020);
-      }
+    function renderStats() {
+      timeValueEl.textContent = formatTime(game.elapsed);
+      mistakeValueEl.textContent = `${game.mistakes}/${game.maxMistakes}`;
+      hintValueEl.textContent = `${game.hintsUsed}/${game.maxHints}`;
+      const best = game.bestTimes[game.difficulty];
+      bestValueEl.textContent = typeof best === "number" ? formatTime(best) : "--:--";
+    }
 
-      function canSkipCurrentWave() {
-        if (state.phase !== 'wave' || state.wave >= state.totalWaves) {
-          return false;
-        }
-        if (state.waveSpawnTotal <= 0) {
-          return false;
-        }
-        const remaining = state.spawnQueue.length + state.zombies.length;
-        const cleared = Math.max(0, state.waveSpawnTotal - remaining);
-        return cleared >= Math.ceil(state.waveSpawnTotal * 0.5);
-      }
+    function renderControls() {
+      noteBtn.textContent = `Notes: ${game.noteMode ? "On" : "Off"}`;
+      noteBtn.classList.toggle("toggle-active", game.noteMode);
+      const hintsLeft = Math.max(0, game.maxHints - game.hintsUsed);
+      hintBtn.textContent = `Hint (${hintsLeft})`;
 
-      function triggerBaseHitEffects(baseDamage) {
-        const impact = clamp(baseDamage / 6, 0.5, 2.2);
-        state.baseHitShakeTimer = BASE_HIT_SHAKE_MS;
-        state.baseHitShakePower = Math.max(state.baseHitShakePower, 11 * impact);
-        state.baseHitFlashTimer = BASE_HIT_FLASH_MS;
-        state.baseHitFlashPower = Math.max(state.baseHitFlashPower, Math.min(0.62, 0.22 * impact));
-        state.baseHitPulseTimer = BASE_HIT_PULSE_MS;
-        state.baseHitPulsePower = Math.max(state.baseHitPulsePower, Math.min(1.2, 0.6 * impact));
-      }
+      const canPlay = game.status === "playing";
+      eraseBtn.disabled = !canPlay;
+      hintBtn.disabled = !canPlay || hintsLeft === 0;
+      noteBtn.disabled = !canPlay;
+      undoBtn.disabled = !canPlay || game.history.length === 0;
+      redoBtn.disabled = !canPlay || game.future.length === 0;
+      clearSelectBtn.disabled = !canPlay;
 
-      function getUpgradeProfile(cost) {
-        if (cost <= 130) {
-          return {
-            damage: [1.14, 1.17, 1.22],
-            range: [1.04, 1.06, 1.08],
-            recoil: [0.95, 0.92, 0.9],
-            area: [1.03, 1.06, 1.08]
-          };
-        }
-        if (cost <= 280) {
-          return {
-            damage: [1.22, 1.26, 1.31],
-            range: [1.06, 1.08, 1.1],
-            recoil: [0.93, 0.9, 0.88],
-            area: [1.05, 1.08, 1.1]
-          };
-        }
-        return {
-          damage: [1.3, 1.34, 1.4],
-          range: [1.08, 1.1, 1.12],
-          recoil: [0.9, 0.86, 0.82],
-          area: [1.08, 1.1, 1.12]
-        };
-      }
+      numberPadEl.querySelectorAll("button").forEach((btn) => {
+        btn.disabled = !canPlay;
+      });
+    }
 
-      function getUpgradeCosts(cost) {
-        if (cost <= 130) {
-          return [Math.round(cost * 0.45), Math.round(cost * 0.72), Math.round(cost * 1.02)];
-        }
-        if (cost <= 280) {
-          return [Math.round(cost * 0.56), Math.round(cost * 0.9), Math.round(cost * 1.35)];
-        }
-        return [Math.round(cost * 0.72), Math.round(cost * 1.12), Math.round(cost * 1.7)];
-      }
-
-      function getTowerPlacementLimit(cost) {
-        if (cost <= 100) {
-          return 10;
-        }
-        if (cost >= 250) {
-          return 2;
-        }
-        if (cost >= 200) {
-          return 3;
-        }
-        return 5;
-      }
-
-      function getPlacedCountByTowerId(towerId) {
-        let count = 0;
-        for (let i = 0; i < state.towers.length; i += 1) {
-          if (state.towers[i].def.id === towerId) {
-            count += 1;
-          }
-        }
-        return count;
-      }
-
-      function getPlacementValidation(def, gx, gy) {
-        if (state.towers.length >= MAX_TOTAL_TOWERS) {
-          return {
-            ok: false,
-            reason: 'Maximum total towers reached (30).'
-          };
-        }
-
-        const tierLimit = getTowerPlacementLimit(def.cost);
-        const placedCount = getPlacedCountByTowerId(def.id);
-        if (placedCount >= tierLimit) {
-          return {
-            ok: false,
-            reason: def.name + ' placement limit reached (' + tierLimit + ').'
-          };
-        }
-
-        const center = cellCenter(gx, gy);
-        if (isInsideSpawnNoBuildZone(center.x, center.y)) {
-          return {
-            ok: false,
-            reason: 'Cannot place in protected spawn zone.'
-          };
-        }
-
-        if (!isBuildableCell(gx, gy)) {
-          return {
-            ok: false,
-            reason: 'Cannot place on the path or near the base.'
-          };
-        }
-
-        if (state.money < def.cost) {
-          return {
-            ok: false,
-            reason: 'Not enough money.'
-          };
-        }
-
-        return { ok: true, reason: '' };
-      }
-
-      function cellKey(gx, gy) {
-        return gx + ',' + gy;
-      }
-
-      function cellCenter(gx, gy) {
-        return {
-          x: gx * GRID_SIZE + GRID_SIZE * 0.5,
-          y: gy * GRID_SIZE + GRID_SIZE * 0.5
-        };
-      }
-
-      function distancePointToSegment(px, py, x1, y1, x2, y2) {
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        const lengthSq = dx * dx + dy * dy;
-        if (lengthSq === 0) {
-          return Math.hypot(px - x1, py - y1);
-        }
-        let t = ((px - x1) * dx + (py - y1) * dy) / lengthSq;
-        t = Math.max(0, Math.min(1, t));
-        const projX = x1 + t * dx;
-        const projY = y1 + t * dy;
-        return Math.hypot(px - projX, py - projY);
-      }
-
-      function distanceToPath(px, py) {
-        let minDistance = Infinity;
-        for (let i = 0; i < pathWaypoints.length - 1; i += 1) {
-          const a = pathWaypoints[i];
-          const b = pathWaypoints[i + 1];
-          const dist = distancePointToSegment(px, py, a.x, a.y, b.x, b.y);
-          if (dist < minDistance) {
-            minDistance = dist;
-          }
-        }
-        return minDistance;
-      }
-
-      function pointOnPath(px, py) {
-        return distanceToPath(px, py) <= PATH_WIDTH * 0.5;
-      }
-
-      function isInsideSpawnNoBuildZone(px, py) {
-        if (pathWaypoints.length < 2) {
-          return false;
-        }
-        const spawn = pathWaypoints[0];
-        const next = pathWaypoints[1];
-        const dirX = next.x - spawn.x;
-        const dirY = next.y - spawn.y;
-        const length = Math.hypot(dirX, dirY);
-        if (length <= 0.001) {
-          return false;
-        }
-
-        const ux = dirX / length;
-        const uy = dirY / length;
-        const perpX = -uy;
-        const perpY = ux;
-        const relX = px - spawn.x;
-        const relY = py - spawn.y;
-        const forward = relX * ux + relY * uy;
-        const side = Math.abs(relX * perpX + relY * perpY);
-
-        return forward >= -SPAWN_NO_BUILD_BACK_DISTANCE
-          && forward <= SPAWN_NO_BUILD_FORWARD_DISTANCE
-          && side <= SPAWN_NO_BUILD_SIDE_DISTANCE;
-      }
-
-      function isBuildableCell(gx, gy) {
-        if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) {
-          return false;
-        }
-        const center = cellCenter(gx, gy);
-        if (isInsideSpawnNoBuildZone(center.x, center.y)) {
-          return false;
-        }
-        if (pointOnPath(center.x, center.y)) {
-          return false;
-        }
-        if (Math.hypot(center.x - basePoint.x, center.y - basePoint.y) < 70) {
-          return false;
-        }
-        return true;
-      }
-
-      function placeTower(def, gx, gy) {
-        const profile = getUpgradeProfile(def.cost);
-        const center = cellCenter(gx, gy);
-        const tower = {
-          id: nextTowerId,
-          def,
-          gx,
-          gy,
-          x: center.x,
-          y: center.y,
-          level: 0,
-          damage: def.damage,
-          range: def.range,
-          recoil: def.recoil,
-          cooldown: Math.random() * 350,
-          area: def.area || 0,
-          burnDps: def.burnDps || 0,
-          poisonDps: def.poisonDps || 0,
-          dotDuration: def.dotDuration || 2000,
-          slowFactor: def.slowFactor || 0.75,
-          slowDuration: def.slowDuration || 1500,
-          chainCount: def.chainCount || 0,
-          jumpRange: def.jumpRange || 0,
-          upgradeCosts: getUpgradeCosts(def.cost),
-          upgradeProfile: profile
-        };
-
-        nextTowerId += 1;
-        state.towers.push(tower);
-        state.towerByCell.set(cellKey(gx, gy), tower);
-        state.money -= def.cost;
-        state.activePlaceId = null;
-        state.selectedTowerId = tower.id;
-        state.shopDirty = true;
-        state.towerInfoDirty = true;
-        showNotice(def.name + ' placed.');
-      }
-
-      function getSelectedTower() {
-        return state.towers.find((tower) => tower.id === state.selectedTowerId) || null;
-      }
-
-      function upgradeSelectedTower() {
-        const tower = getSelectedTower();
-        if (!tower) {
-          showNotice('Select a tower first.');
-          return;
-        }
-
-        if (tower.level >= 3) {
-          showNotice('Tower is already max level.');
-          return;
-        }
-
-        const upgradeCost = tower.upgradeCosts[tower.level];
-        if (state.money < upgradeCost) {
-          showNotice('Not enough money to upgrade.');
-          return;
-        }
-
-        const index = tower.level;
-        tower.level += 1;
-        tower.damage *= tower.upgradeProfile.damage[index];
-        tower.range *= tower.upgradeProfile.range[index];
-        tower.recoil *= tower.upgradeProfile.recoil[index];
-        tower.area *= tower.upgradeProfile.area[index];
-
-        if (tower.burnDps > 0) {
-          tower.burnDps *= tower.upgradeProfile.damage[index];
-        }
-        if (tower.poisonDps > 0) {
-          tower.poisonDps *= tower.upgradeProfile.damage[index];
-        }
-
-        state.money -= upgradeCost;
-        state.shopDirty = true;
-        state.towerInfoDirty = true;
-        showNotice(tower.def.name + ' upgraded to level ' + tower.level + '.');
-      }
-
-      function sellSelectedTower() {
-        if (state.phase === 'gameover' || state.phase === 'victory') {
-          return;
-        }
-
-        const tower = getSelectedTower();
-        if (!tower) {
-          showNotice('Select a tower first.');
-          return;
-        }
-
-        const refund = Math.floor(tower.def.cost * 0.5);
-        const index = state.towers.findIndex((item) => item.id === tower.id);
-        if (index === -1) {
-          return;
-        }
-
-        state.towers.splice(index, 1);
-        state.towerByCell.delete(cellKey(tower.gx, tower.gy));
-        state.selectedTowerId = null;
-        addMoney(refund);
-        state.shopDirty = true;
-        state.towerInfoDirty = true;
-        showNotice(tower.def.name + ' sold for $' + refund + '.');
-      }
-
-      function addMoney(amount) {
-        if (amount <= 0) {
-          return;
-        }
-        state.money += amount;
-        state.shopDirty = true;
-        state.towerInfoDirty = true;
-      }
-
-      function addTracer(x1, y1, x2, y2, color, width) {
-        state.tracers.push({
-          x1,
-          y1,
-          x2,
-          y2,
-          color,
-          width: width || 2,
-          life: 90,
-          maxLife: 90
-        });
-      }
-
-      function addExplosion(x, y, radius, color) {
-        state.explosions.push({
-          x,
-          y,
-          radius,
-          color,
-          life: 240,
-          maxLife: 240
-        });
-        playExplosionSfx(radius);
-      }
-
-      function findLeadTarget(tower) {
-        const rangeSq = tower.range * tower.range;
-        let best = null;
-        let bestProgress = -Infinity;
-
-        for (let i = 0; i < state.zombies.length; i += 1) {
-          const zombie = state.zombies[i];
-          if (zombie.dead || zombie.reached) {
-            continue;
-          }
-          const dx = zombie.x - tower.x;
-          const dy = zombie.y - tower.y;
-          if (dx * dx + dy * dy > rangeSq) {
-            continue;
-          }
-          if (zombie.progress > bestProgress) {
-            bestProgress = zombie.progress;
-            best = zombie;
-          }
-        }
-
-        return best;
-      }
-
-      function getTargetsInRange(x, y, range) {
-        const rangeSq = range * range;
-        const targets = [];
-        for (let i = 0; i < state.zombies.length; i += 1) {
-          const zombie = state.zombies[i];
-          if (zombie.dead || zombie.reached) {
-            continue;
-          }
-          const dx = zombie.x - x;
-          const dy = zombie.y - y;
-          if (dx * dx + dy * dy <= rangeSq) {
-            targets.push(zombie);
-          }
-        }
-        targets.sort((a, b) => b.progress - a.progress);
-        return targets;
-      }
-
-      function applyDamage(zombie, amount) {
-        if (!zombie || zombie.dead || zombie.reached) {
-          return;
-        }
-        zombie.hp -= amount;
-        if (zombie.hp <= 0) {
-          zombie.dead = true;
-          addMoney(zombie.reward);
-          state.kills += 1;
-          playMoneySfx();
-        }
-      }
-
-      function addDot(zombie, type, dps, duration) {
-        const payload = {
-          dps,
-          time: duration
-        };
-        if (type === 'burn') {
-          zombie.burns.push(payload);
-        } else {
-          zombie.poisons.push(payload);
-        }
-      }
-
-      function addSlow(zombie, factor, duration) {
-        zombie.slows.push({
-          factor,
-          time: duration
-        });
-      }
-
-      function damageInRadius(x, y, radius, damage) {
-        const radiusSq = radius * radius;
-        for (let i = 0; i < state.zombies.length; i += 1) {
-          const zombie = state.zombies[i];
-          if (zombie.dead || zombie.reached) {
-            continue;
-          }
-          const dx = zombie.x - x;
-          const dy = zombie.y - y;
-          if (dx * dx + dy * dy <= radiusSq) {
-            applyDamage(zombie, damage);
-          }
-        }
-      }
-
-      function findNearestJumpTarget(currentZombie, jumpRange, hitSet) {
-        let best = null;
-        let bestDist = Infinity;
-        const jumpRangeSq = jumpRange * jumpRange;
-
-        for (let i = 0; i < state.zombies.length; i += 1) {
-          const candidate = state.zombies[i];
-          if (candidate.dead || candidate.reached || hitSet.has(candidate.id)) {
-            continue;
-          }
-          const dx = candidate.x - currentZombie.x;
-          const dy = candidate.y - currentZombie.y;
-          const distSq = dx * dx + dy * dy;
-          if (distSq <= jumpRangeSq && distSq < bestDist) {
-            best = candidate;
-            bestDist = distSq;
-          }
-        }
-
-        return best;
-      }
-
-      function fireTower(tower) {
-        const color = tower.def.color;
-
-        if (tower.def.attackType === 'single') {
-          const target = findLeadTarget(tower);
-          if (!target) {
-            return false;
-          }
-          applyDamage(target, tower.damage);
-          addTracer(tower.x, tower.y, target.x, target.y, color, 2);
-          return true;
-        }
-
-        if (tower.def.attackType === 'burst') {
-          const targets = getTargetsInRange(tower.x, tower.y, tower.range).slice(0, 3);
-          if (!targets.length) {
-            return false;
-          }
-          for (let i = 0; i < targets.length; i += 1) {
-            const target = targets[i];
-            const mult = 1 - i * 0.18;
-            applyDamage(target, tower.damage * mult);
-            addTracer(tower.x, tower.y, target.x, target.y, color, 1.7);
-          }
-          return true;
-        }
-
-        if (tower.def.attackType === 'splash') {
-          const target = findLeadTarget(tower);
-          if (!target) {
-            return false;
-          }
-          const radius = tower.area || 90;
-          damageInRadius(target.x, target.y, radius, tower.damage);
-          addTracer(tower.x, tower.y, target.x, target.y, color, 2.2);
-          addExplosion(target.x, target.y, radius, 'rgba(255, 160, 120, 0.4)');
-          return true;
-        }
-
-        if (tower.def.attackType === 'burn_splash') {
-          const target = findLeadTarget(tower);
-          if (!target) {
-            return false;
-          }
-          const radius = tower.area || 80;
-          const radiusSq = radius * radius;
-          for (let i = 0; i < state.zombies.length; i += 1) {
-            const zombie = state.zombies[i];
-            if (zombie.dead || zombie.reached) {
-              continue;
-            }
-            const dx = zombie.x - target.x;
-            const dy = zombie.y - target.y;
-            if (dx * dx + dy * dy <= radiusSq) {
-              applyDamage(zombie, tower.damage * 0.65);
-              addDot(zombie, 'burn', tower.burnDps || tower.damage, tower.dotDuration);
-            }
-          }
-          addExplosion(target.x, target.y, radius, 'rgba(255, 115, 68, 0.44)');
-          return true;
-        }
-
-        if (tower.def.attackType === 'slow') {
-          const target = findLeadTarget(tower);
-          if (!target) {
-            return false;
-          }
-          applyDamage(target, tower.damage);
-          addSlow(target, tower.slowFactor, tower.slowDuration);
-          addTracer(tower.x, tower.y, target.x, target.y, color, 2.1);
-          return true;
-        }
-
-        if (tower.def.attackType === 'poison') {
-          const target = findLeadTarget(tower);
-          if (!target) {
-            return false;
-          }
-          applyDamage(target, tower.damage * 0.7);
-          addDot(target, 'poison', tower.poisonDps || tower.damage, tower.dotDuration);
-          addTracer(tower.x, tower.y, target.x, target.y, color, 1.8);
-          return true;
-        }
-
-        if (tower.def.attackType === 'chain') {
-          const firstTarget = findLeadTarget(tower);
-          if (!firstTarget) {
-            return false;
-          }
-          const maxChain = tower.chainCount || 3;
-          const hitSet = new Set();
-          let currentTarget = firstTarget;
-          let originX = tower.x;
-          let originY = tower.y;
-          let chainDamage = tower.damage;
-
-          for (let i = 0; i < maxChain && currentTarget; i += 1) {
-            applyDamage(currentTarget, chainDamage);
-            addTracer(originX, originY, currentTarget.x, currentTarget.y, color, 2.4 - i * 0.3);
-            hitSet.add(currentTarget.id);
-            originX = currentTarget.x;
-            originY = currentTarget.y;
-            chainDamage *= 0.82;
-            currentTarget = findNearestJumpTarget(currentTarget, tower.jumpRange || 90, hitSet);
-          }
-          return true;
-        }
-
-        if (tower.def.attackType === 'mortar') {
-          const target = findLeadTarget(tower);
-          if (!target) {
-            return false;
-          }
-          state.shells.push({
-            x1: tower.x,
-            y1: tower.y,
-            x2: target.x,
-            y2: target.y,
-            life: 520,
-            maxLife: 520,
-            damage: tower.damage,
-            radius: tower.area || 120,
-            color
-          });
-          return true;
-        }
-
-        if (tower.def.attackType === 'pierce') {
-          const target = findLeadTarget(tower);
-          if (!target) {
-            return false;
-          }
-          const x1 = tower.x;
-          const y1 = tower.y;
-          const x2 = target.x;
-          const y2 = target.y;
-          let hitCount = 0;
-
-          for (let i = 0; i < state.zombies.length; i += 1) {
-            const zombie = state.zombies[i];
-            if (zombie.dead || zombie.reached) {
-              continue;
-            }
-            const distToLine = distancePointToSegment(zombie.x, zombie.y, x1, y1, x2, y2);
-            const distFromTower = Math.hypot(zombie.x - x1, zombie.y - y1);
-            if (distToLine <= 13 && distFromTower <= tower.range + 14) {
-              applyDamage(zombie, tower.damage);
-              hitCount += 1;
-            }
-          }
-
-          if (hitCount > 0) {
-            addTracer(x1, y1, x2, y2, color, 3.1);
-            return true;
-          }
-          return false;
-        }
-
+    function isPeer(a, b) {
+      if (!a) {
         return false;
       }
-
-      function updateTowers(dt) {
-        for (let i = 0; i < state.towers.length; i += 1) {
-          const tower = state.towers[i];
-          tower.cooldown -= dt;
-          if (tower.cooldown > 0) {
-            continue;
-          }
-          if (!state.zombies.length) {
-            continue;
-          }
-          const fired = fireTower(tower);
-          if (fired) {
-            playTowerShotSfx(tower);
-            tower.cooldown = tower.recoil;
-          }
-        }
-      }
-
-      function updateZombieStatus(zombie, dt) {
-        let dotDamage = 0;
-
-        for (let i = zombie.burns.length - 1; i >= 0; i -= 1) {
-          const burn = zombie.burns[i];
-          burn.time -= dt;
-          dotDamage += burn.dps * (dt / 1000);
-          if (burn.time <= 0) {
-            zombie.burns.splice(i, 1);
-          }
-        }
-
-        for (let i = zombie.poisons.length - 1; i >= 0; i -= 1) {
-          const poison = zombie.poisons[i];
-          poison.time -= dt;
-          dotDamage += poison.dps * (dt / 1000);
-          if (poison.time <= 0) {
-            zombie.poisons.splice(i, 1);
-          }
-        }
-
-        for (let i = zombie.slows.length - 1; i >= 0; i -= 1) {
-          zombie.slows[i].time -= dt;
-          if (zombie.slows[i].time <= 0) {
-            zombie.slows.splice(i, 1);
-          }
-        }
-
-        return dotDamage;
-      }
-
-      function getSlowMultiplier(zombie) {
-        let factor = 1;
-        for (let i = 0; i < zombie.slows.length; i += 1) {
-          if (zombie.slows[i].factor < factor) {
-            factor = zombie.slows[i].factor;
-          }
-        }
-        return factor;
-      }
-
-      function getSegmentProgress(zombie) {
-        const start = pathWaypoints[zombie.pathIndex];
-        const end = pathWaypoints[zombie.pathIndex + 1];
-        if (!start || !end) {
-          return pathWaypoints.length;
-        }
-        const segmentLength = Math.hypot(end.x - start.x, end.y - start.y);
-        if (segmentLength <= 0) {
-          return zombie.pathIndex;
-        }
-        const traveled = Math.hypot(zombie.x - start.x, zombie.y - start.y);
-        return zombie.pathIndex + Math.max(0, Math.min(1, traveled / segmentLength));
-      }
-
-      function moveZombie(zombie, distance) {
-        let remaining = distance;
-        while (remaining > 0 && !zombie.dead && !zombie.reached) {
-          const nextPoint = pathWaypoints[zombie.pathIndex + 1];
-          if (!nextPoint) {
-            zombie.reached = true;
-            break;
-          }
-
-          const dx = nextPoint.x - zombie.x;
-          const dy = nextPoint.y - zombie.y;
-          const distToNext = Math.hypot(dx, dy);
-
-          if (distToNext === 0) {
-            zombie.pathIndex += 1;
-            continue;
-          }
-
-          if (remaining >= distToNext) {
-            zombie.x = nextPoint.x;
-            zombie.y = nextPoint.y;
-            zombie.pathIndex += 1;
-            zombie.distanceTraveled += distToNext;
-            remaining -= distToNext;
-
-            if (zombie.pathIndex >= pathWaypoints.length - 1) {
-              zombie.reached = true;
-              state.baseHp -= zombie.baseDamage;
-              triggerBaseHitEffects(zombie.baseDamage);
-              break;
-            }
-          } else {
-            zombie.x += (dx / distToNext) * remaining;
-            zombie.y += (dy / distToNext) * remaining;
-            zombie.distanceTraveled += remaining;
-            remaining = 0;
-          }
-        }
-
-        zombie.progress = getSegmentProgress(zombie);
-      }
-
-      function updateZombies(dt) {
-        for (let i = 0; i < state.zombies.length; i += 1) {
-          const zombie = state.zombies[i];
-          if (zombie.dead || zombie.reached) {
-            continue;
-          }
-
-          const dotDamage = updateZombieStatus(zombie, dt);
-          if (dotDamage > 0) {
-            applyDamage(zombie, dotDamage);
-          }
-          if (zombie.dead) {
-            continue;
-          }
-
-          const slowFactor = getSlowMultiplier(zombie);
-          const moveDist = zombie.speed * slowFactor * (dt / 1000);
-          moveZombie(zombie, moveDist);
-
-          if (zombie.isBoss && zombie.canSummonAtHalf && !zombie.summonedAtHalf && zombie.distanceTraveled >= mapPathLength * 0.5) {
-            zombie.summonedAtHalf = true;
-            spawnSummonedZombies(10);
-            showNotice(zombie.name + ' reached halfway and summoned 10 zombies!');
-          }
-        }
-
-        state.zombies = state.zombies.filter((zombie) => !zombie.dead && !zombie.reached);
-      }
-
-      function updateVisualEffects(dt) {
-        for (let i = state.tracers.length - 1; i >= 0; i -= 1) {
-          state.tracers[i].life -= dt;
-          if (state.tracers[i].life <= 0) {
-            state.tracers.splice(i, 1);
-          }
-        }
-
-        for (let i = state.explosions.length - 1; i >= 0; i -= 1) {
-          state.explosions[i].life -= dt;
-          if (state.explosions[i].life <= 0) {
-            state.explosions.splice(i, 1);
-          }
-        }
-
-        for (let i = state.shells.length - 1; i >= 0; i -= 1) {
-          const shell = state.shells[i];
-          shell.life -= dt;
-          if (shell.life <= 0) {
-            damageInRadius(shell.x2, shell.y2, shell.radius, shell.damage);
-            addExplosion(shell.x2, shell.y2, shell.radius, 'rgba(255, 200, 125, 0.45)');
-            state.shells.splice(i, 1);
-          }
-        }
-      }
-
-      function waveCounts(wave) {
-        const counts = {
-          weak: 0,
-          normal: 0,
-          fast: 0,
-          tank: 0,
-          giant: 0
-        };
-
-        if (wave <= 5) {
-          counts.weak = 6 + wave * 2;
-          counts.normal = Math.max(0, wave - 3) * 2;
-        } else if (wave <= 15) {
-          const t = wave - 5;
-          counts.weak = 6 + t;
-          counts.normal = 8 + t * 2;
-          counts.fast = 2 + Math.floor(t * 1.1);
-        } else if (wave <= 25) {
-          const t = wave - 15;
-          counts.normal = 12 + t;
-          counts.fast = 8 + t;
-          counts.tank = 3 + Math.floor(t * 0.8);
-        } else if (wave <= 35) {
-          const t = wave - 25;
-          counts.normal = 10 + t;
-          counts.fast = 10 + t;
-          counts.tank = 7 + t;
-          counts.giant = 10 + Math.floor(Math.max(0, t - 1) / 2);
-        } else {
-          const t = wave - 35;
-          counts.normal = 10 + t * 2;
-          counts.fast = 14 + t * 2;
-          counts.tank = 10 + t * 2;
-          counts.giant = 15 + t;
-        }
-
-        const spawnMultiplier = activeMap.zombieMultiplier || 1;
-        const keys = Object.keys(counts);
-        for (let i = 0; i < keys.length; i += 1) {
-          const type = keys[i];
-          if (counts[type] > 0) {
-            counts[type] = Math.max(1, Math.round(counts[type] * spawnMultiplier));
-          }
-        }
-
-        if (wave === 5) {
-          const targetTotal = 16 + (activeMap.level - 1) * 2;
-          let currentTotal = counts.weak + counts.normal + counts.fast + counts.tank + counts.giant;
-          let delta = targetTotal - currentTotal;
-
-          if (delta > 0) {
-            counts.weak += delta;
-          } else if (delta < 0) {
-            const reduceOrder = ['weak', 'normal', 'fast', 'tank', 'giant'];
-            for (let i = 0; i < reduceOrder.length && delta < 0; i += 1) {
-              const key = reduceOrder[i];
-              const available = counts[key];
-              if (available <= 0) {
-                continue;
-              }
-              const take = Math.min(available, Math.abs(delta));
-              counts[key] -= take;
-              delta += take;
-            }
-          }
-        }
-
-        return counts;
-      }
-
-      function generateWaveQueue(wave) {
-        const counts = waveCounts(wave);
-        const queue = [];
-
-        Object.keys(counts).forEach((type) => {
-          for (let i = 0; i < counts[type]; i += 1) {
-            queue.push(type);
-          }
-        });
-
-        for (let i = queue.length - 1; i > 0; i -= 1) {
-          const j = Math.floor(Math.random() * (i + 1));
-          const temp = queue[i];
-          queue[i] = queue[j];
-          queue[j] = temp;
-        }
-
-        if (wave === 20 && activeMap.level > 1) {
-          const prevBoss = createBossQueueEntry(activeMap.level - 1, 'mid');
-          queue.splice(Math.floor(queue.length * 0.5), 0, prevBoss);
-        }
-
-        if (wave === TOTAL_WAVES) {
-          queue.push(createBossQueueEntry(activeMap.level, 'final'));
-        }
-
-        return queue;
-      }
-
-      function spawnRegularZombie(type) {
-        const base = ZOMBIE_TYPES[type];
-        const hp = Math.max(1, Math.round(base.hp * (1 + (state.wave - 1) * base.growth)));
-        const speed = base.speed * (1 + Math.min(0.35, (state.wave - 1) * 0.01));
-        const reward = Math.max(1, Math.round(base.reward * (1 + (state.wave - 1) * 0.03)));
-
-        state.zombies.push({
-          id: nextZombieId,
-          type,
-          x: pathWaypoints[0].x,
-          y: pathWaypoints[0].y,
-          hp,
-          maxHp: hp,
-          speed,
-          reward,
-          baseDamage: base.baseDamage,
-          size: base.size,
-          color: base.color,
-          pathIndex: 0,
-          progress: 0,
-          distanceTraveled: 0,
-          isBoss: false,
-          canSummonAtHalf: false,
-          summonedAtHalf: false,
-          burns: [],
-          poisons: [],
-          slows: [],
-          dead: false,
-          reached: false
-        });
-
-        nextZombieId += 1;
-      }
-
-      function spawnBossZombie(mapLevel, tag) {
-        const boss = getBossProfile(mapLevel);
-        state.zombies.push({
-          id: nextZombieId,
-          type: 'boss',
-          bossTag: tag || 'final',
-          mapLevel: boss.mapLevel,
-          name: boss.name,
-          x: pathWaypoints[0].x,
-          y: pathWaypoints[0].y,
-          hp: boss.hp,
-          maxHp: boss.hp,
-          speed: boss.speed,
-          reward: boss.reward,
-          baseDamage: boss.baseDamage,
-          size: boss.size,
-          color: boss.color,
-          pathIndex: 0,
-          progress: 0,
-          distanceTraveled: 0,
-          isBoss: true,
-          canSummonAtHalf: true,
-          summonedAtHalf: false,
-          burns: [],
-          poisons: [],
-          slows: [],
-          dead: false,
-          reached: false
-        });
-        nextZombieId += 1;
-      }
-
-      function spawnSummonedZombies(count) {
-        const summonPool = ['weak', 'normal', 'fast'];
-        for (let i = 0; i < count; i += 1) {
-          const type = summonPool[Math.floor(Math.random() * summonPool.length)];
-          spawnRegularZombie(type);
-        }
-      }
-
-      function spawnZombie(entry) {
-        if (typeof entry === 'string') {
-          spawnRegularZombie(entry);
-          return;
-        }
-        if (!entry || entry.kind !== 'boss') {
-          return;
-        }
-        spawnBossZombie(entry.mapLevel, entry.tag);
-      }
-
-      function startNextWave() {
-        if (state.wave >= state.totalWaves) {
-          return;
-        }
-
-        state.wave += 1;
-        state.phase = 'wave';
-        state.spawnQueue = generateWaveQueue(state.wave);
-        state.waveSpawnTotal = state.spawnQueue.length;
-        state.waveSpawned = 0;
-        state.spawnTimer = 420;
-        state.status = 'Wave ' + state.wave + ' started';
-      }
-
-      function finishCurrentWave() {
-        const clearBonus = getWaveCompletionBonus(state.wave);
-        addMoney(clearBonus);
-        state.waveSpawnTotal = 0;
-        state.waveSpawned = 0;
-
-        if (state.wave >= state.totalWaves) {
-          const winRewards = grantWinRewards(activeMap.level);
-          recordMapWin(activeMap.id);
-          state.phase = 'victory';
-         state.status = 'All waves cleared';
-         state.activePlaceId = null;
-          state.selectedTowerId = null;
-          state.shopDirty = true;
-          state.towerInfoDirty = true;
-          ui.resultTitle.textContent = 'Victory';
-          const levelUpText = winRewards.levelUps > 0 ? ' Level up +' + winRewards.levelUps + '!' : '';
-          ui.resultText.textContent = 'You survived through wave 40. Total kills: ' + state.kills + '. Wave clear bonus: $' + clearBonus + '. Reward: +' + winRewards.exp + ' EXP and +$' + winRewards.money + '.' + levelUpText;
-         ui.resultOverlay.classList.remove('hidden');
-          return;
-        }
-
-        state.phase = 'prep';
-        state.prepTimer = 8500;
-        state.status = 'Wave ' + state.wave + ' cleared';
-        showNotice('Wave ' + state.wave + ' clear bonus +$' + clearBonus + '.');
-      }
-
-      function triggerGameOver() {
-        if (state.phase === 'gameover') {
-          return;
-        }
-        recordMapLoss(activeMap.id);
-        state.phase = 'gameover';
-        state.status = 'Base destroyed';
-        state.activePlaceId = null;
-        state.selectedTowerId = null;
-        state.shopDirty = true;
-        state.towerInfoDirty = true;
-        ui.resultTitle.textContent = 'Game Over';
-        ui.resultText.textContent = 'You survived until wave ' + state.wave + '. Total kills: ' + state.kills + '.';
-        ui.resultOverlay.classList.remove('hidden');
-      }
-
-      function updateHud() {
-        ui.waveValue.textContent = state.wave + '/' + state.totalWaves;
-        ui.moneyValue.textContent = '$' + Math.floor(state.money);
-        const hpValue = Math.max(0, state.baseHp);
-        ui.baseHpValue.textContent = Math.ceil(hpValue);
-        const hpRatio = clamp(hpValue / START_BASE_HP, 0, 1);
-        ui.baseHpFill.style.width = (hpRatio * 100).toFixed(1) + '%';
-
-        let status = state.status;
-
-        if (state.noticeTimer > 0 && state.notice) {
-          status = state.notice;
-        } else if (state.phase === 'prep') {
-          status = 'Wave ' + (state.wave + 1) + ' in ' + Math.max(0, Math.ceil(state.prepTimer / 1000)) + 's';
-        } else if (state.phase === 'wave') {
-          status = 'Wave ' + state.wave + ' | ' + (state.spawnQueue.length + state.zombies.length) + ' zombies left';
-        } else if (state.phase === 'victory') {
-          status = 'Defense successful';
-        } else if (state.phase === 'gameover') {
-          status = 'Base destroyed';
-        }
-
-        ui.statusValue.textContent = status;
-        if (state.phase === 'prep') {
-          ui.skipPrepBtn.disabled = false;
-          ui.skipPrepBtn.textContent = 'Start Wave';
-          return;
-        }
-
-        if (canSkipCurrentWave()) {
-          ui.skipPrepBtn.disabled = false;
-          ui.skipPrepBtn.textContent = 'Skip > ' + (state.wave + 1);
-          return;
-        }
-
-        ui.skipPrepBtn.disabled = true;
-        if (state.phase === 'wave' && state.wave < state.totalWaves && state.waveSpawnTotal > 0) {
-          const remainingEnemies = state.spawnQueue.length + state.zombies.length;
-          const cleared = Math.max(0, state.waveSpawnTotal - remainingEnemies);
-          const needed = Math.max(0, Math.ceil(state.waveSpawnTotal * 0.5) - cleared);
-          ui.skipPrepBtn.textContent = 'Skip in ' + needed;
-          return;
-        }
-        ui.skipPrepBtn.textContent = 'Start Wave';
-      }
-
-      function renderTowerInfo() {
-        const tower = getSelectedTower();
-        if (!tower) {
-          ui.towerPopup.classList.add('hidden');
-          ui.towerInfo.innerHTML = '<div class="muted">Click a placed tower to view stats and upgrades.</div>';
-          ui.upgradeBtn.disabled = true;
-          ui.upgradeBtn.textContent = 'Select Tower';
-          ui.sellBtn.disabled = true;
-          ui.sellBtn.textContent = 'Sell Tower';
-          return;
-        }
-
-        ui.towerPopup.classList.remove('hidden');
-        const nextCost = tower.level < 3 ? tower.upgradeCosts[tower.level] : null;
-        const sellValue = Math.floor(tower.def.cost * 0.5);
-        ui.towerInfo.innerHTML = [
-          '<strong>' + tower.def.name + '</strong>',
-          'Level: ' + tower.level + ' / 3',
-          'Damage: ' + tower.damage.toFixed(2),
-          'Range: ' + Math.round(tower.range),
-          'Attack Speed: 1 shot / ' + (tower.recoil / 1000).toFixed(2) + ' sec',
-          'Type: ' + tower.def.attackType,
-          tower.area > 0 ? 'Area: ' + Math.round(tower.area) : '',
-          'Sell Refund: $' + sellValue,
-          '<div class="muted">Grid Position: (' + tower.gx + ', ' + tower.gy + ')</div>'
-        ].filter(Boolean).join('<br>');
-
-        ui.sellBtn.textContent = 'Sell ($' + sellValue + ')';
-        ui.sellBtn.disabled = state.phase === 'gameover' || state.phase === 'victory';
-
-        if (nextCost == null) {
-          ui.upgradeBtn.textContent = 'Max Upgrade';
-          ui.upgradeBtn.disabled = true;
-          return;
-        }
-
-        ui.upgradeBtn.textContent = 'Upgrade ($' + nextCost + ')';
-        ui.upgradeBtn.disabled = state.money < nextCost || state.phase === 'gameover' || state.phase === 'victory';
-      }
-
-      function renderShop() {
-        ui.shopBar.innerHTML = '';
-
-        for (let i = 0; i < state.selectedTowerIds.length; i += 1) {
-          const towerId = state.selectedTowerIds[i];
-          const def = towerById.get(towerId);
-          const button = document.createElement('button');
-          button.className = 'shopItem';
-          if (state.activePlaceId === def.id) {
-            button.classList.add('active');
-          }
-          const tierLimit = getTowerPlacementLimit(def.cost);
-          const placedCount = getPlacedCountByTowerId(def.id);
-          const atPlacementLimit = state.towers.length >= MAX_TOTAL_TOWERS || placedCount >= tierLimit;
-          if (state.money < def.cost || atPlacementLimit) {
-            button.classList.add('locked');
-          }
-
-          const cooldownSeconds = (def.recoil / 1000).toFixed(2);
-          button.innerHTML =
-            '<strong>' + def.name + '</strong>' +
-            '<span class="cost">$' + def.cost + '</span>' +
-            '<span class="mini">DMG ' + def.damage + ' | RNG ' + def.range + ' | CD ' + cooldownSeconds + ' sec | LIMIT ' + placedCount + '/' + tierLimit + '</span>';
-          bindButtonSfx(button);
-
-          button.addEventListener('click', () => {
-            if (state.phase === 'gameover' || state.phase === 'victory') {
-              return;
-            }
-            if (state.towers.length >= MAX_TOTAL_TOWERS) {
-              showNotice('Maximum total towers reached (30).');
-              return;
-            }
-            if (placedCount >= tierLimit) {
-              showNotice(def.name + ' placement limit reached (' + tierLimit + ').');
-              return;
-            }
-            state.selectedTowerId = null;
-            state.activePlaceId = state.activePlaceId === def.id ? null : def.id;
-            state.shopDirty = true;
-            state.towerInfoDirty = true;
-          });
-
-          ui.shopBar.appendChild(button);
-        }
-
-        const cancelButton = document.createElement('button');
-        cancelButton.className = 'shopItem';
-        cancelButton.innerHTML =
-          '<strong>Cancel Placement</strong>' +
-          '<span class="cost">-</span>' +
-          '<span class="mini">Exit tower placement mode</span>';
-        bindButtonSfx(cancelButton);
-        cancelButton.addEventListener('click', () => {
-          state.activePlaceId = null;
-          state.shopDirty = true;
-        });
-        ui.shopBar.appendChild(cancelButton);
-      }
-
-      function updateSelectionSummary() {
-        const map = mapById.get(selectedMapId);
-        const mapLabel = map ? map.name + ' [' + map.difficulty + ']' : 'No map selected';
-        const startMoney = map ? getStartMoneyForMapLevel(map.level) : START_MONEY;
-        ui.selectedCount.textContent = 'Selected: ' + selectedPool.size + ' (min 1, max 5) | Map: ' + mapLabel + ' | Start $' + startMoney;
-        ui.startGameBtn.disabled = selectedPool.size < 1 || selectedPool.size > 5 || !map;
-      }
-
-      function renderProfileBar() {
-        const needed = expNeededForLevel(playerProfile.level);
-        const ratio = needed > 0 ? clamp(playerProfile.exp / needed, 0, 1) : 0;
-        ui.levelValue.textContent = 'LV ' + playerProfile.level;
-        ui.expText.textContent = playerProfile.exp + ' / ' + needed + ' EXP';
-        ui.expFill.style.width = (ratio * 100).toFixed(1) + '%';
-        ui.cashValue.textContent = playerProfile.money.toLocaleString('en-US');
-      }
-
-      function renderMapSelection() {
-        ui.mapGrid.innerHTML = '';
-        for (let i = 0; i < MAP_CATALOG.length; i += 1) {
-          const map = MAP_CATALOG[i];
-          const record = ensureMapProfileStat(map.id);
-          const button = document.createElement('button');
-          button.className = 'mapCard';
-          if (selectedMapId === map.id) {
-            button.classList.add('selected');
-          }
-          button.innerHTML =
-            '<strong>' + map.name + '</strong>' +
-            '<span class="meta">' + map.difficulty + ' | ' + map.theme + '</span>' +
-            '<span class="desc">' + map.description + '</span>' +
-            '<span class="record">W ' + record.wins + ' | L ' + record.losses + ' | Plays ' + record.plays + '</span>';
-          bindButtonSfx(button);
-
-          button.addEventListener('click', () => {
-            selectedMapId = map.id;
-            setActiveMap(map.id);
-            renderMapSelection();
-            updateSelectionSummary();
-          });
-
-          ui.mapGrid.appendChild(button);
-        }
-      }
-
-      function renderCharacterSelection() {
-        ui.characterGrid.innerHTML = '';
-        const maxReached = selectedPool.size >= 5;
-
-        for (let i = 0; i < TOWER_CATALOG.length; i += 1) {
-          const def = TOWER_CATALOG[i];
-          const card = document.createElement('button');
-          card.className = 'charCard';
-          const selected = selectedPool.has(def.id);
-
-          if (selected) {
-            card.classList.add('selected');
-          }
-          if (!selected && maxReached) {
-            card.classList.add('locked');
-          }
-
-          card.innerHTML =
-            '<div class="charTop"><span class="charName">' + def.name + '</span><span class="charCost">$' + def.cost + '</span></div>' +
-            '<div class="charDesc">' + def.description + '</div>' +
-            '<div class="charStats"><span>DMG ' + def.damage + '</span><span>RNG ' + def.range + '</span><span>CD ' + (def.recoil / 1000).toFixed(2) + 's</span></div>';
-          bindButtonSfx(card);
-
-          card.addEventListener('click', () => {
-            if (selectedPool.has(def.id)) {
-              selectedPool.delete(def.id);
-            } else {
-              if (selectedPool.size >= 5) {
-                showNotice('Maximum 5 characters.');
-                return;
-              }
-              selectedPool.add(def.id);
-            }
-            renderCharacterSelection();
-          });
-
-          ui.characterGrid.appendChild(card);
-        }
-
-        updateSelectionSummary();
-      }
-
-      function beginGame() {
-        if (selectedPool.size < 1 || selectedPool.size > 5 || !selectedMapId) {
-          return;
-        }
-
-        setActiveMap(selectedMapId);
-        recordMapPlay(activeMap.id);
-        state = createInitialState();
-        touchPointers.clear();
-        pinchState.active = false;
-        state.mapId = selectedMapId;
-        state.money = getStartMoneyForMapLevel(activeMap.level);
-        state.phase = 'prep';
-        state.prepTimer = 7000;
-        state.status = activeMap.name + ' | Preparing wave 1';
-        state.selectedTowerIds = Array.from(selectedPool);
-        state.gameSpeed = gameSpeedMultiplier;
-        state.pathArrowHintTimer = PATH_ARROW_HINT_MS;
-
-        nextTowerId = 1;
-        nextZombieId = 1;
-
-        ui.selectionScreen.classList.add('hidden');
-        ui.gameScreen.classList.remove('hidden');
-        ui.resultOverlay.classList.add('hidden');
-        document.body.classList.add('inGame');
-        resizeArenaCanvas();
-        setCameraZoom(1);
-        focusCameraOnPath();
-        ui.arenaViewport.classList.remove('dragging');
-        ui.towerPopup.classList.add('hidden');
-        showPanHintPopup();
-
-        state.shopDirty = true;
-        state.towerInfoDirty = true;
-        renderSpeedButtons();
-      }
-
-      function resetToSelection() {
-        state = createInitialState();
-        touchPointers.clear();
-        pinchState.active = false;
-        ui.resultOverlay.classList.add('hidden');
-        ui.gameScreen.classList.add('hidden');
-        ui.selectionScreen.classList.remove('hidden');
-        document.body.classList.remove('inGame');
-        ui.arenaViewport.classList.remove('dragging');
-        if (panHintTimeout) {
-          clearTimeout(panHintTimeout);
-          panHintTimeout = null;
-        }
-        ui.panHint.classList.remove('show');
-        ui.towerPopup.classList.add('hidden');
-        setActiveMap(selectedMapId);
-        renderProfileBar();
-        renderMapSelection();
-        renderCharacterSelection();
-      }
-
-      function handleCanvasPointer(event, isClick) {
-        if (ui.gameScreen.classList.contains('hidden')) {
-          return;
-        }
-
-        const rect = canvas.getBoundingClientRect();
-        const insideCanvas = event.clientX >= rect.left
-          && event.clientX <= rect.right
-          && event.clientY >= rect.top
-          && event.clientY <= rect.bottom;
-        if (!insideCanvas) {
-          state.hoverCell = null;
-          return;
-        }
-
-        const point = getWorldPointFromClient(event.clientX, event.clientY);
-        if (!point) {
-          state.hoverCell = null;
-          return;
-        }
-        const x = point.x;
-        const y = point.y;
-        const gx = Math.floor(x / GRID_SIZE);
-        const gy = Math.floor(y / GRID_SIZE);
-
-        state.hoverCell = { gx, gy, x, y };
-
-        if (!isClick) {
-          return;
-        }
-
-        playUiClickSfx();
-        unlockAudio();
-
-        if (state.phase === 'gameover' || state.phase === 'victory') {
-          return;
-        }
-
-        if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) {
-          return;
-        }
-
-        const key = cellKey(gx, gy);
-        const existing = state.towerByCell.get(key);
-        if (existing) {
-          state.selectedTowerId = existing.id;
-          state.activePlaceId = null;
-          state.shopDirty = true;
-          state.towerInfoDirty = true;
-          return;
-       }
-
-        if (!state.activePlaceId) {
-          state.selectedTowerId = null;
-          state.towerInfoDirty = true;
-          return;
-        }
-
-        const def = towerById.get(state.activePlaceId);
-        const placement = getPlacementValidation(def, gx, gy);
-        if (!placement.ok) {
-          showNotice(placement.reason);
-          return;
-        }
-
-        placeTower(def, gx, gy);
-      }
-
-      function drawBackground() {
-        const palette = activeMap.palette;
-        const gradient = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
-        gradient.addColorStop(0, palette.bgTop);
-        gradient.addColorStop(1, palette.bgBottom);
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-
-        ctx.fillStyle = palette.speckle;
-        for (let i = 0; i < 40; i += 1) {
-          const x = (i * 137) % WORLD_WIDTH;
-          const y = (i * 211) % WORLD_HEIGHT;
-          ctx.beginPath();
-          ctx.arc(x, y, 1.2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      function drawGrid() {
-        ctx.strokeStyle = 'rgba(222, 245, 229, 0.08)';
-        ctx.lineWidth = 1;
-        for (let x = 0; x <= WORLD_WIDTH; x += GRID_SIZE) {
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, WORLD_HEIGHT);
-          ctx.stroke();
-        }
-
-        for (let y = 0; y <= WORLD_HEIGHT; y += GRID_SIZE) {
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(WORLD_WIDTH, y);
-          ctx.stroke();
-        }
-      }
-
-      function drawPath() {
-        const palette = activeMap.palette;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
-        ctx.strokeStyle = palette.pathOuter;
-        ctx.lineWidth = PATH_WIDTH + 8;
-        ctx.beginPath();
-        ctx.moveTo(pathWaypoints[0].x, pathWaypoints[0].y);
-        for (let i = 1; i < pathWaypoints.length; i += 1) {
-          ctx.lineTo(pathWaypoints[i].x, pathWaypoints[i].y);
-        }
-        ctx.stroke();
-
-        ctx.strokeStyle = palette.pathInner;
-        ctx.lineWidth = PATH_WIDTH;
-        ctx.beginPath();
-        ctx.moveTo(pathWaypoints[0].x, pathWaypoints[0].y);
-        for (let i = 1; i < pathWaypoints.length; i += 1) {
-          ctx.lineTo(pathWaypoints[i].x, pathWaypoints[i].y);
-        }
-        ctx.stroke();
-
-        ctx.strokeStyle = palette.pathDash;
-        ctx.lineWidth = 4;
-        ctx.setLineDash([12, 12]);
-        ctx.beginPath();
-        ctx.moveTo(pathWaypoints[0].x, pathWaypoints[0].y);
-        for (let i = 1; i < pathWaypoints.length; i += 1) {
-          ctx.lineTo(pathWaypoints[i].x, pathWaypoints[i].y);
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      function drawPathDirectionArrows() {
-        if (state.pathArrowHintTimer <= 0 || pathWaypoints.length < 2) {
-          return;
-        }
-
-        const life = clamp(state.pathArrowHintTimer / PATH_ARROW_HINT_MS, 0, 1);
-        const pulse = 0.55 + 0.45 * Math.sin(performance.now() * 0.015);
-        const alpha = clamp((0.2 + pulse * 0.55) * Math.min(1, life * 1.25), 0.12, 0.92);
-        const spacing = 140;
-        const headLength = 17;
-        const headWidth = 9;
-
-        ctx.fillStyle = 'rgba(255, 244, 176, ' + alpha.toFixed(3) + ')';
-        ctx.strokeStyle = 'rgba(75, 52, 20, ' + (alpha * 0.65).toFixed(3) + ')';
-        ctx.lineWidth = 1.2;
-        ctx.lineJoin = 'round';
-
-        for (let i = 0; i < pathWaypoints.length - 1; i += 1) {
-          const a = pathWaypoints[i];
-          const b = pathWaypoints[i + 1];
-          const segX = b.x - a.x;
-          const segY = b.y - a.y;
-          const segLen = Math.hypot(segX, segY);
-          if (segLen < 30) {
-            continue;
-          }
-          const ux = segX / segLen;
-          const uy = segY / segLen;
-          const perpX = -uy;
-          const perpY = ux;
-
-          for (let dist = 26; dist < segLen - 10; dist += spacing) {
-            const px = a.x + ux * dist;
-            const py = a.y + uy * dist;
-            const tipX = px + ux * headLength;
-            const tipY = py + uy * headLength;
-            const backX = px - ux * (headLength * 0.45);
-            const backY = py - uy * (headLength * 0.45);
-            const leftX = backX + perpX * headWidth;
-            const leftY = backY + perpY * headWidth;
-            const rightX = backX - perpX * headWidth;
-            const rightY = backY - perpY * headWidth;
-
-            ctx.beginPath();
-            ctx.moveTo(tipX, tipY);
-            ctx.lineTo(leftX, leftY);
-            ctx.lineTo(rightX, rightY);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-          }
-        }
-      }
-
-      function drawBase() {
-        const palette = activeMap.palette;
-        ctx.fillStyle = palette.baseCore;
-        ctx.beginPath();
-        ctx.arc(basePoint.x, basePoint.y, 28, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = palette.baseText;
-        ctx.font = 'bold 12px Segoe UI';
-        ctx.textAlign = 'center';
-        ctx.fillText('BASE', basePoint.x, basePoint.y + 4);
-        ctx.fillStyle = palette.spawnCore;
-        ctx.beginPath();
-        ctx.arc(pathWaypoints[0].x + 18, pathWaypoints[0].y, 16, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = palette.spawnText;
-        ctx.fillText('SPAWN', pathWaypoints[0].x + 18, pathWaypoints[0].y + 4);
-      }
-
-      function drawBaseHitPulse() {
-        if (state.baseHitPulseTimer <= 0 || state.baseHitPulsePower <= 0) {
-          return;
-        }
-        const ratio = clamp(state.baseHitPulseTimer / BASE_HIT_PULSE_MS, 0, 1);
-        const growth = (1 - ratio) * (48 + state.baseHitPulsePower * 12);
-        const radius = 30 + growth;
-        const strokeAlpha = clamp((0.18 + state.baseHitPulsePower * 0.26) * ratio, 0, 0.75);
-        const fillAlpha = clamp((0.08 + state.baseHitPulsePower * 0.11) * ratio, 0, 0.4);
-        ctx.fillStyle = 'rgba(255, 52, 52, ' + fillAlpha.toFixed(3) + ')';
-        ctx.beginPath();
-        ctx.arc(basePoint.x, basePoint.y, Math.max(32, radius * 0.55), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 36, 36, ' + strokeAlpha.toFixed(3) + ')';
-        ctx.lineWidth = 3 + state.baseHitPulsePower * 2.4;
-        ctx.beginPath();
-        ctx.arc(basePoint.x, basePoint.y, radius, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      function drawPlacementPreview() {
-        if (!state.hoverCell || !state.activePlaceId) {
-          return;
-        }
-
-        const gx = state.hoverCell.gx;
-        const gy = state.hoverCell.gy;
-        if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) {
-          return;
-        }
-
-        const key = cellKey(gx, gy);
-        const def = towerById.get(state.activePlaceId);
-        const center = cellCenter(gx, gy);
-        const availableCell = !state.towerByCell.has(key);
-        const canBuild = availableCell && getPlacementValidation(def, gx, gy).ok;
-
-        ctx.fillStyle = canBuild ? 'rgba(106, 212, 144, 0.3)' : 'rgba(231, 97, 97, 0.3)';
-        ctx.fillRect(gx * GRID_SIZE + 1, gy * GRID_SIZE + 1, GRID_SIZE - 2, GRID_SIZE - 2);
-
-        ctx.strokeStyle = canBuild ? 'rgba(147, 237, 177, 0.8)' : 'rgba(242, 125, 125, 0.85)';
-        ctx.lineWidth = 1.4;
-        ctx.strokeRect(gx * GRID_SIZE + 1, gy * GRID_SIZE + 1, GRID_SIZE - 2, GRID_SIZE - 2);
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.17)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, def.range, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      function drawTowers() {
-        for (let i = 0; i < state.towers.length; i += 1) {
-          const tower = state.towers[i];
-          const radius = 12 + tower.level;
-
-          ctx.fillStyle = tower.def.color;
-          ctx.beginPath();
-          ctx.arc(tower.x, tower.y, radius, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-          ctx.beginPath();
-          ctx.arc(tower.x + 2, tower.y + 2, radius * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#f4f4f4';
-          ctx.font = 'bold 10px Segoe UI';
-          ctx.textAlign = 'center';
-          ctx.fillText('L' + tower.level, tower.x, tower.y + 3);
-
-          if (tower.id === state.selectedTowerId) {
-            ctx.strokeStyle = 'rgba(245, 195, 85, 0.95)';
-            ctx.lineWidth = 2.2;
-            ctx.beginPath();
-            ctx.arc(tower.x, tower.y, radius + 4, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.strokeStyle = 'rgba(255, 245, 185, 0.23)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(tower.x, tower.y, tower.range, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-        }
-      }
-
-      function drawZombies() {
-        for (let i = 0; i < state.zombies.length; i += 1) {
-          const zombie = state.zombies[i];
-          const r = zombie.size;
-
-          ctx.fillStyle = zombie.color;
-          ctx.beginPath();
-          ctx.arc(zombie.x, zombie.y, r, 0, Math.PI * 2);
-          ctx.fill();
-
-          if (zombie.slows.length) {
-            ctx.strokeStyle = 'rgba(132, 220, 248, 0.9)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(zombie.x, zombie.y, r + 2, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-
-          if (zombie.burns.length) {
-            ctx.strokeStyle = 'rgba(255, 148, 85, 0.9)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(zombie.x, zombie.y, r + 4, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-
-          if (zombie.poisons.length) {
-            ctx.strokeStyle = 'rgba(143, 225, 135, 0.9)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(zombie.x, zombie.y, r + 6, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-
-          const hpRatio = Math.max(0, zombie.hp / zombie.maxHp);
-          const barWidth = r * 2.2;
-          const barHeight = 4;
-          const barX = zombie.x - barWidth / 2;
-          const barY = zombie.y - r - 10;
-
-          ctx.fillStyle = 'rgba(20, 25, 18, 0.78)';
-          ctx.fillRect(barX, barY, barWidth, barHeight);
-          ctx.fillStyle = hpRatio > 0.45 ? '#7de38f' : '#f3887a';
-          ctx.fillRect(barX, barY, barWidth * hpRatio, barHeight);
-        }
-      }
-
-      function drawShells() {
-        for (let i = 0; i < state.shells.length; i += 1) {
-          const shell = state.shells[i];
-          const progress = 1 - shell.life / shell.maxLife;
-          const x = shell.x1 + (shell.x2 - shell.x1) * progress;
-          const yLinear = shell.y1 + (shell.y2 - shell.y1) * progress;
-          const y = yLinear - Math.sin(Math.PI * progress) * 70;
-
-          ctx.fillStyle = '#f9d8aa';
-          ctx.beginPath();
-          ctx.arc(x, y, 4, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.strokeStyle = 'rgba(255, 210, 140, 0.55)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(x - 8, y + 4);
-          ctx.stroke();
-        }
-      }
-
-      function drawExplosions() {
-        for (let i = 0; i < state.explosions.length; i += 1) {
-          const explosion = state.explosions[i];
-          const alpha = explosion.life / explosion.maxLife;
-          const radius = explosion.radius * (0.35 + (1 - alpha) * 0.8);
-          const fillAlpha = Math.max(0.08, alpha * 0.5);
-          const color = explosion.color.startsWith('rgba')
-            ? explosion.color.replace(/rgba\(([^,]+),([^,]+),([^,]+),[^)]+\)/, 'rgba($1,$2,$3,' + fillAlpha + ')')
-            : 'rgba(255, 180, 120, ' + fillAlpha + ')';
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(explosion.x, explosion.y, radius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      function drawTracers() {
-        for (let i = 0; i < state.tracers.length; i += 1) {
-          const tracer = state.tracers[i];
-          const alpha = tracer.life / tracer.maxLife;
-          ctx.strokeStyle = tracer.color;
-          ctx.globalAlpha = Math.max(0, alpha);
-          ctx.lineWidth = tracer.width;
-          ctx.beginPath();
-          ctx.moveTo(tracer.x1, tracer.y1);
-          ctx.lineTo(tracer.x2, tracer.y2);
-          ctx.stroke();
-        }
-        ctx.globalAlpha = 1;
-      }
-
-      function drawBaseHitOverlay() {
-        if (state.baseHitFlashTimer <= 0 || state.baseHitFlashPower <= 0) {
-          return;
-        }
-        const ratio = clamp(state.baseHitFlashTimer / BASE_HIT_FLASH_MS, 0, 1);
-        const alpha = clamp(state.baseHitFlashPower * (0.6 + ratio * 0.7), 0, 0.58);
-        ctx.fillStyle = 'rgba(245, 48, 48, ' + alpha.toFixed(3) + ')';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-
-      function render() {
-        ctx.save();
-        let shakeOffsetX = 0;
-        let shakeOffsetY = 0;
-        if (state.baseHitShakeTimer > 0 && state.baseHitShakePower > 0) {
-          const ratio = clamp(state.baseHitShakeTimer / BASE_HIT_SHAKE_MS, 0, 1);
-          const power = state.baseHitShakePower * ratio;
-          shakeOffsetX = (Math.random() * 2 - 1) * power;
-          shakeOffsetY = (Math.random() * 2 - 1) * power;
-        }
-        ctx.translate(shakeOffsetX, shakeOffsetY);
-        ctx.scale(cameraZoom, cameraZoom);
-        ctx.translate(-camera.x, -camera.y);
-
-        drawBackground();
-        drawGrid();
-        drawPath();
-        drawPathDirectionArrows();
-        drawBase();
-        drawBaseHitPulse();
-        drawPlacementPreview();
-        drawTowers();
-        drawZombies();
-        drawShells();
-        drawExplosions();
-        drawTracers();
-        ctx.restore();
-
-        drawBaseHitOverlay();
-      }
-
-      function update(dt) {
-        if (state.noticeTimer > 0) {
-         state.noticeTimer -= dt;
-          if (state.noticeTimer <= 0) {
-            state.notice = '';
-          }
-        }
-
-        if (state.baseHitShakeTimer > 0) {
-          state.baseHitShakeTimer -= dt;
-          if (state.baseHitShakeTimer <= 0) {
-            state.baseHitShakeTimer = 0;
-            state.baseHitShakePower = 0;
-          }
-        }
-        if (state.baseHitFlashTimer > 0) {
-          state.baseHitFlashTimer -= dt;
-          if (state.baseHitFlashTimer <= 0) {
-            state.baseHitFlashTimer = 0;
-            state.baseHitFlashPower = 0;
-          }
-        }
-        if (state.baseHitPulseTimer > 0) {
-          state.baseHitPulseTimer -= dt;
-          if (state.baseHitPulseTimer <= 0) {
-            state.baseHitPulseTimer = 0;
-            state.baseHitPulsePower = 0;
-          }
-        }
-
-        if (state.pathArrowHintTimer > 0) {
-          state.pathArrowHintTimer = Math.max(0, state.pathArrowHintTimer - dt);
-        }
-
-        updateVisualEffects(dt);
-
-        if (state.phase === 'select' || state.phase === 'gameover' || state.phase === 'victory') {
-          updateHud();
-          if (state.shopDirty) {
-            renderShop();
-            state.shopDirty = false;
-          }
-          if (state.towerInfoDirty) {
-            renderTowerInfo();
-            state.towerInfoDirty = false;
-          }
-          return;
-        }
-
-        if (state.phase === 'prep') {
-          state.prepTimer -= dt;
-          if (state.prepTimer <= 0) {
-            startNextWave();
-          }
-        }
-
-        if (state.phase === 'wave') {
-          state.spawnTimer -= dt;
-          if (state.spawnQueue.length > 0 && state.spawnTimer <= 0) {
-            const zombieType = state.spawnQueue.shift();
-            spawnZombie(zombieType);
-            state.waveSpawned += 1;
-            const baseInterval = Math.max(160, 520 - state.wave * 7);
-            state.spawnTimer = baseInterval + Math.random() * 150;
-          }
-        }
-
-        updateTowers(dt);
-        updateZombies(dt);
-
-        if (state.baseHp <= 0) {
-          triggerGameOver();
-        }
-        if (state.phase === 'wave' && state.spawnQueue.length === 0 && state.zombies.length === 0) {
-          finishCurrentWave();
-        }
-
-        updateHud();
-
-        if (state.shopDirty) {
-          renderShop();
-          state.shopDirty = false;
-        }
-
-        if (state.towerInfoDirty) {
-          renderTowerInfo();
-          state.towerInfoDirty = false;
-        }
-      }
-
-      let lastTime = performance.now();
-      function gameLoop(timestamp) {
-        const dt = Math.min(50, timestamp - lastTime || 16.67);
-        lastTime = timestamp;
-        const simDt = dt * (state.gameSpeed || gameSpeedMultiplier || 1);
-        update(simDt);
-        render();
-        requestAnimationFrame(gameLoop);
-      }
-
-      function storeTouchPointer(event) {
-        if (event.pointerType !== 'touch') {
-          return;
-        }
-        touchPointers.set(event.pointerId, {
-          x: event.clientX,
-          y: event.clientY
-        });
-      }
-
-      function removeTouchPointer(event) {
-        if (event.pointerType !== 'touch') {
-          return;
-        }
-        touchPointers.delete(event.pointerId);
-      }
-
-      function getPinchSnapshot() {
-        if (touchPointers.size < 2) {
-          return null;
-        }
-        const points = Array.from(touchPointers.values());
-        const a = points[0];
-        const b = points[1];
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        return {
-          distance: Math.hypot(dx, dy),
-          centerX: (a.x + b.x) * 0.5,
-          centerY: (a.y + b.y) * 0.5
-        };
-      }
-
-      function beginPinchZoom() {
-        const snapshot = getPinchSnapshot();
-        if (!snapshot) {
-          return;
-        }
-        pinchState.active = true;
-        pinchState.startDistance = Math.max(12, snapshot.distance);
-        pinchState.startZoom = cameraZoom;
-
-        if (dragState.active && dragState.pointerId != null && canvas.hasPointerCapture && canvas.hasPointerCapture(dragState.pointerId)) {
-          canvas.releasePointerCapture(dragState.pointerId);
-        }
-        dragState.active = false;
-        dragState.moved = false;
-        dragState.pointerId = null;
-        ui.arenaViewport.classList.remove('dragging');
-        state.hoverCell = null;
-      }
-
-      function updatePinchZoom() {
-        if (!pinchState.active) {
-          return false;
-        }
-        const snapshot = getPinchSnapshot();
-        if (!snapshot) {
-          return false;
-        }
-        const zoomRatio = snapshot.distance / Math.max(12, pinchState.startDistance);
-        const nextZoom = pinchState.startZoom * zoomRatio;
-        setCameraZoom(nextZoom, snapshot.centerX, snapshot.centerY);
+      if (a.r === b.r || a.c === b.c) {
         return true;
       }
+      return Math.floor(a.r / 3) === Math.floor(b.r / 3) && Math.floor(a.c / 3) === Math.floor(b.c / 3);
+    }
 
-      function handoffPinchToSingleFingerDrag() {
-        if (touchPointers.size !== 1) {
-          pinchState.active = false;
-          return;
+    function renderCell(cell, r, c) {
+      const idx = r * 9 + c;
+      const value = game.board[r][c];
+      const isGiven = game.fixed.has(idx);
+
+      cell.classList.remove("given", "selected", "peer", "same", "invalid", "wrong");
+
+      if (isGiven) {
+        cell.classList.add("given");
+      }
+
+      if (game.selected && game.selected.r === r && game.selected.c === c) {
+        cell.classList.add("selected");
+      }
+
+      if (game.selected && isPeer(game.selected, { r, c }) && !(game.selected.r === r && game.selected.c === c)) {
+        cell.classList.add("peer");
+      }
+
+      const selectedValue = game.selected ? game.board[game.selected.r][game.selected.c] : 0;
+      if (selectedValue && value === selectedValue) {
+        cell.classList.add("same");
+      }
+
+      if (game.flashInvalid.has(idx)) {
+        cell.classList.add("invalid");
+      }
+
+      if (game.wrongCells.has(idx)) {
+        cell.classList.add("wrong");
+      }
+
+      if (value) {
+        cell.innerHTML = `<span class="digit">${value}</span>`;
+        return;
+      }
+
+      const notes = game.notes[idx];
+      if (notes.size === 0) {
+        cell.textContent = "";
+        return;
+      }
+
+      const fragments = [];
+      for (let i = 1; i <= 9; i += 1) {
+        fragments.push(`<span>${notes.has(i) ? i : ""}</span>`);
+      }
+      cell.innerHTML = `<div class="notes-grid">${fragments.join("")}</div>`;
+    }
+
+    function renderBoard() {
+      for (let r = 0; r < 9; r += 1) {
+        for (let c = 0; c < 9; c += 1) {
+          const idx = r * 9 + c;
+          renderCell(cellElements[idx], r, c);
         }
+      }
+    }
 
-        const iterator = touchPointers.entries().next();
-        if (!iterator || iterator.done) {
-          pinchState.active = false;
-          return;
+    function renderAll() {
+      renderDifficultyBar();
+      renderStats();
+      renderBoard();
+      renderControls();
+      queueViewportFit();
+    }
+
+    function selectCell(r, c) {
+      game.selected = { r, c };
+      renderBoard();
+    }
+
+    function clearSelection() {
+      game.selected = null;
+      renderBoard();
+    }
+
+    function clearPeerNotes(r, c, value) {
+      for (let i = 0; i < 9; i += 1) {
+        if (i !== c) {
+          game.notes[r * 9 + i].delete(value);
         }
+        if (i !== r) {
+          game.notes[i * 9 + c].delete(value);
+        }
+      }
 
-        const remaining = iterator.value;
-        const pointerId = remaining[0];
-        const point = remaining[1];
+      const sr = Math.floor(r / 3) * 3;
+      const sc = Math.floor(c / 3) * 3;
+      for (let rr = sr; rr < sr + 3; rr += 1) {
+        for (let cc = sc; cc < sc + 3; cc += 1) {
+          if (rr === r && cc === c) {
+            continue;
+          }
+          game.notes[rr * 9 + cc].delete(value);
+        }
+      }
+    }
 
-        pinchState.active = false;
-        dragState.active = true;
-        dragState.moved = true;
-        dragState.pointerId = pointerId;
-        dragState.startClientX = point.x;
-        dragState.startClientY = point.y;
-        dragState.startCameraX = camera.x;
-        dragState.startCameraY = camera.y;
-        ui.arenaViewport.classList.add('dragging');
+    function flashInvalidCell(idx) {
+      game.flashInvalid.add(idx);
+      renderBoard();
+      setTimeout(() => {
+        game.flashInvalid.delete(idx);
+        renderBoard();
+      }, 300);
+    }
 
-        if (canvas.setPointerCapture) {
-          try {
-            canvas.setPointerCapture(pointerId);
-          } catch (error) {
-            // Some mobile browsers may reject capture during pinch handoff.
+    function handleMistake(idx) {
+      game.mistakes += 1;
+      flashInvalidCell(idx);
+      renderStats();
+      if (game.mistakes >= game.maxMistakes) {
+        endGame(false);
+      }
+    }
+
+    function checkWin() {
+      for (let r = 0; r < 9; r += 1) {
+        for (let c = 0; c < 9; c += 1) {
+          if (game.board[r][c] !== game.solution[r][c]) {
+            return false;
           }
         }
       }
+      return true;
+    }
 
-      function beginCanvasDrag(event) {
-        if (ui.gameScreen.classList.contains('hidden')) {
+    function handleNumberInput(value) {
+      if (game.status !== "playing" || !game.selected) {
+        return;
+      }
+
+      const { r, c } = game.selected;
+      const idx = r * 9 + c;
+
+      if (game.fixed.has(idx)) {
+        return;
+      }
+
+      if (game.noteMode && game.board[r][c] === 0) {
+        pushHistory();
+        const notes = game.notes[idx];
+        if (notes.has(value)) {
+          notes.delete(value);
+        } else {
+          notes.add(value);
+        }
+        renderAll();
+        return;
+      }
+
+      if (game.board[r][c] === value) {
+        return;
+      }
+
+      pushHistory();
+      game.board[r][c] = value;
+      game.notes[idx].clear();
+      if (game.solution[r][c] === value) {
+        game.wrongCells.delete(idx);
+        clearPeerNotes(r, c, value);
+        if (checkWin()) {
+          endGame(true);
           return;
         }
-        if (event.pointerType === 'mouse' && event.button !== 0) {
-          return;
-        }
-        ui.panHint.classList.remove('show');
-        dragState.active = true;
-        dragState.moved = false;
-        dragState.pointerId = event.pointerId;
-        dragState.startClientX = event.clientX;
-        dragState.startClientY = event.clientY;
-        dragState.startCameraX = camera.x;
-        dragState.startCameraY = camera.y;
-        if (canvas.setPointerCapture) {
-          canvas.setPointerCapture(event.pointerId);
+        renderAll();
+        return;
+      }
+
+      game.wrongCells.add(idx);
+      handleMistake(idx);
+      if (game.status === "playing") {
+        renderAll();
+      }
+    }
+
+    function eraseSelection() {
+      if (game.status !== "playing" || !game.selected) {
+        return;
+      }
+
+      const { r, c } = game.selected;
+      const idx = r * 9 + c;
+      if (game.fixed.has(idx)) {
+        return;
+      }
+
+      const hasNumber = game.board[r][c] !== 0;
+      const hasNotes = game.notes[idx].size > 0;
+      if (!hasNumber && !hasNotes) {
+        return;
+      }
+
+      pushHistory();
+      if (game.noteMode && hasNotes) {
+        game.notes[idx].clear();
+      } else if (hasNumber) {
+        game.board[r][c] = 0;
+        game.wrongCells.delete(idx);
+      } else {
+        game.notes[idx].clear();
+      }
+
+      renderAll();
+    }
+
+    function useHint() {
+      if (game.status !== "playing") {
+        return;
+      }
+
+      if (game.hintsUsed >= game.maxHints) {
+        return;
+      }
+
+      let target = null;
+      if (game.selected) {
+        const idx = game.selected.r * 9 + game.selected.c;
+        if (!game.fixed.has(idx) && game.board[game.selected.r][game.selected.c] !== game.solution[game.selected.r][game.selected.c]) {
+          target = { ...game.selected };
         }
       }
 
-      function moveCanvasDrag(event) {
-        if (!dragState.active || event.pointerId !== dragState.pointerId) {
-          handleCanvasPointer(event, false);
-          return;
-        }
-
-        const dx = event.clientX - dragState.startClientX;
-        const dy = event.clientY - dragState.startClientY;
-        if (!dragState.moved && Math.hypot(dx, dy) > 8) {
-          dragState.moved = true;
-          ui.arenaViewport.classList.add('dragging');
-        }
-
-        if (dragState.moved) {
-          camera.x = dragState.startCameraX - dx / cameraZoom;
-          camera.y = dragState.startCameraY - dy / cameraZoom;
-          clampCameraToWorld();
-          state.hoverCell = null;
-          if (event.cancelable) {
-            event.preventDefault();
-          }
-          return;
-        }
-
-        handleCanvasPointer(event, false);
-      }
-
-      function endCanvasDrag(event, tapToPlace) {
-        if (!dragState.active || event.pointerId !== dragState.pointerId) {
-          return;
-        }
-        const moved = dragState.moved;
-        dragState.active = false;
-        dragState.moved = false;
-        dragState.pointerId = null;
-        ui.arenaViewport.classList.remove('dragging');
-        if (canvas.hasPointerCapture && canvas.hasPointerCapture(event.pointerId)) {
-          canvas.releasePointerCapture(event.pointerId);
-        }
-        if (tapToPlace && !moved) {
-          handleCanvasPointer(event, true);
-        }
-      }
-
-      canvas.addEventListener('pointerdown', (event) => {
-        unlockAudio();
-        storeTouchPointer(event);
-        if (event.pointerType === 'touch' && touchPointers.size >= 2) {
-          if (ENABLE_TOUCH_PINCH_ZOOM) {
-            beginPinchZoom();
-            if (event.cancelable) {
-              event.preventDefault();
+      if (!target) {
+        const unsolved = [];
+        for (let r = 0; r < 9; r += 1) {
+          for (let c = 0; c < 9; c += 1) {
+            const idx = r * 9 + c;
+            if (!game.fixed.has(idx) && game.board[r][c] !== game.solution[r][c]) {
+              unsolved.push({ r, c });
             }
           }
+        }
+        if (!unsolved.length) {
           return;
         }
-        beginCanvasDrag(event);
-        handleCanvasPointer(event, false);
+        target = unsolved[Math.floor(Math.random() * unsolved.length)];
+      }
+
+      const idx = target.r * 9 + target.c;
+      pushHistory();
+      game.board[target.r][target.c] = game.solution[target.r][target.c];
+      game.wrongCells.delete(idx);
+      game.notes[idx].clear();
+      clearPeerNotes(target.r, target.c, game.solution[target.r][target.c]);
+      game.selected = { ...target };
+      game.hintsUsed += 1;
+
+      if (checkWin()) {
+        endGame(true);
+      } else {
+        renderAll();
+      }
+    }
+
+    function updateBestIfNeeded() {
+      const currentBest = game.bestTimes[game.difficulty];
+      if (typeof currentBest !== "number" || game.elapsed < currentBest) {
+        game.bestTimes[game.difficulty] = game.elapsed;
+        saveBestTimes();
+      }
+    }
+
+    function showResult(title, text, primaryLabel) {
+      resultTitle.textContent = title;
+      resultText.textContent = text;
+      playAgainBtn.textContent = primaryLabel;
+      resultOverlay.classList.remove("hidden");
+    }
+
+    function hideResult() {
+      resultOverlay.classList.add("hidden");
+    }
+
+    function endGame(isWin) {
+      game.status = isWin ? "won" : "lost";
+      clearTimer();
+
+      if (isWin) {
+        updateBestIfNeeded();
+        showResult(
+          "Puzzle Solved",
+          `Time ${formatTime(game.elapsed)}. Mistakes ${game.mistakes}/${game.maxMistakes}. Hints used ${game.hintsUsed}/${game.maxHints}.`,
+          "Replay Puzzle"
+        );
+      } else {
+        showResult(
+          "Out of Mistakes",
+          `You reached ${game.maxMistakes} mistakes. Try again or roll a fresh puzzle.`,
+          "Retry Puzzle"
+        );
+      }
+
+      renderAll();
+    }
+
+    function countClues(board) {
+      let clues = 0;
+      for (let r = 0; r < 9; r += 1) {
+        for (let c = 0; c < 9; c += 1) {
+          if (board[r][c] !== 0) {
+            clues += 1;
+          }
+        }
+      }
+      return clues;
+    }
+
+    function generateSolvedBoard() {
+      const base = 3;
+      const side = 9;
+      const rBase = range(base);
+
+      const rows = shuffle(rBase).flatMap((group) => shuffle(rBase).map((row) => group * base + row));
+      const cols = shuffle(rBase).flatMap((group) => shuffle(rBase).map((col) => group * base + col));
+      const nums = shuffle(range(side).map((v) => v + 1));
+
+      return rows.map((r) => cols.map((c) => nums[(base * (r % base) + Math.floor(r / base) + c) % side]));
+    }
+
+    function getCandidates(board, r, c) {
+      if (board[r][c] !== 0) {
+        return [];
+      }
+
+      const used = new Array(10).fill(false);
+
+      for (let i = 0; i < 9; i += 1) {
+        used[board[r][i]] = true;
+        used[board[i][c]] = true;
+      }
+
+      const sr = Math.floor(r / 3) * 3;
+      const sc = Math.floor(c / 3) * 3;
+      for (let rr = sr; rr < sr + 3; rr += 1) {
+        for (let cc = sc; cc < sc + 3; cc += 1) {
+          used[board[rr][cc]] = true;
+        }
+      }
+
+      const candidates = [];
+      for (let n = 1; n <= 9; n += 1) {
+        if (!used[n]) {
+          candidates.push(n);
+        }
+      }
+      return candidates;
+    }
+
+    function findBestEmpty(board) {
+      let best = null;
+
+      for (let r = 0; r < 9; r += 1) {
+        for (let c = 0; c < 9; c += 1) {
+          if (board[r][c] !== 0) {
+            continue;
+          }
+          const candidates = getCandidates(board, r, c);
+          if (!candidates.length) {
+            return { r, c, candidates };
+          }
+          if (!best || candidates.length < best.candidates.length) {
+            best = { r, c, candidates };
+            if (best.candidates.length === 1) {
+              return best;
+            }
+          }
+        }
+      }
+
+      return best;
+    }
+
+    function countSolutions(board, limit = 2) {
+      const next = findBestEmpty(board);
+      if (!next) {
+        return 1;
+      }
+      if (!next.candidates.length) {
+        return 0;
+      }
+
+      let total = 0;
+      for (const n of next.candidates) {
+        board[next.r][next.c] = n;
+        total += countSolutions(board, limit - total);
+        if (total >= limit) {
+          board[next.r][next.c] = 0;
+          return total;
+        }
+        board[next.r][next.c] = 0;
+      }
+
+      return total;
+    }
+
+    function hasUniqueSolution(board) {
+      const copy = cloneBoard(board);
+      return countSolutions(copy, 2) === 1;
+    }
+
+    function digPuzzle(solution, targetClues) {
+      const puzzle = cloneBoard(solution);
+      const targetHoles = 81 - targetClues;
+      let holes = 0;
+
+      const pairSeeds = shuffle(range(41));
+      for (const seed of pairSeeds) {
+        if (holes >= targetHoles) {
+          break;
+        }
+        const mirror = 80 - seed;
+        const cells = seed === mirror ? [seed] : [seed, mirror];
+        if (holes + cells.length > targetHoles) {
+          continue;
+        }
+
+        const backups = cells.map((idx) => {
+          const r = Math.floor(idx / 9);
+          const c = idx % 9;
+          return { idx, r, c, value: puzzle[r][c] };
+        });
+
+        if (backups.some((entry) => entry.value === 0)) {
+          continue;
+        }
+
+        backups.forEach((entry) => {
+          puzzle[entry.r][entry.c] = 0;
+        });
+
+        if (hasUniqueSolution(puzzle)) {
+          holes += cells.length;
+        } else {
+          backups.forEach((entry) => {
+            puzzle[entry.r][entry.c] = entry.value;
+          });
+        }
+      }
+
+      const singles = shuffle(range(81));
+      for (const idx of singles) {
+        if (holes >= targetHoles) {
+          break;
+        }
+
+        const r = Math.floor(idx / 9);
+        const c = idx % 9;
+        if (puzzle[r][c] === 0) {
+          continue;
+        }
+
+        const backup = puzzle[r][c];
+        puzzle[r][c] = 0;
+        if (hasUniqueSolution(puzzle)) {
+          holes += 1;
+        } else {
+          puzzle[r][c] = backup;
+        }
+      }
+
+      return puzzle;
+    }
+
+    function generatePuzzleForDifficulty(config) {
+      let best = null;
+
+      for (let attempt = 0; attempt < config.maxAttempts; attempt += 1) {
+        const solution = generateSolvedBoard();
+        const puzzle = digPuzzle(solution, config.clues);
+        const clues = countClues(puzzle);
+
+        if (!best || clues < best.clues) {
+          best = { solution, puzzle, clues };
+        }
+
+        if (clues === config.clues) {
+          break;
+        }
+      }
+
+      return {
+        solution: best.solution,
+        puzzle: best.puzzle
+      };
+    }
+
+    function firstEmptyCell(board) {
+      for (let r = 0; r < 9; r += 1) {
+        for (let c = 0; c < 9; c += 1) {
+          if (board[r][c] === 0) {
+            return { r, c };
+          }
+        }
+      }
+      return null;
+    }
+
+    function resetBoardFromPuzzle() {
+      game.board = cloneBoard(game.puzzle);
+      game.notes = Array.from({ length: 81 }, () => new Set());
+      game.fixed = new Set();
+
+      for (let r = 0; r < 9; r += 1) {
+        for (let c = 0; c < 9; c += 1) {
+          if (game.puzzle[r][c] !== 0) {
+            game.fixed.add(r * 9 + c);
+          }
+        }
+      }
+
+      game.selected = firstEmptyCell(game.board);
+      game.noteMode = false;
+      game.mistakes = 0;
+      game.hintsUsed = 0;
+      game.elapsed = 0;
+      game.history.length = 0;
+      game.future.length = 0;
+      game.wrongCells.clear();
+      game.flashInvalid.clear();
+      game.status = "playing";
+      hideResult();
+      startTimer();
+      renderAll();
+    }
+
+    async function startNewGame() {
+      const config = DIFFICULTIES[game.difficulty];
+      game.status = "generating";
+      renderControls();
+      setLoading(true, `Generating ${config.label.toLowerCase()} puzzle...`);
+      hideResult();
+      clearTimer();
+
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      const generated = generatePuzzleForDifficulty(config);
+
+      game.solution = cloneBoard(generated.solution);
+      game.puzzle = cloneBoard(generated.puzzle);
+
+      resetBoardFromPuzzle();
+      setLoading(false);
+    }
+
+    function moveSelection(dr, dc) {
+      if (game.status !== "playing") {
+        return;
+      }
+
+      if (!game.selected) {
+        const empty = firstEmptyCell(game.board);
+        game.selected = empty || { r: 0, c: 0 };
+        renderBoard();
+        return;
+      }
+
+      const r = (game.selected.r + dr + 9) % 9;
+      const c = (game.selected.c + dc + 9) % 9;
+      selectCell(r, c);
+    }
+
+    function bindEvents() {
+      newGameBtn.addEventListener("click", startNewGame);
+
+      restartBtn.addEventListener("click", () => {
+        if (!game.puzzle.length) {
+          return;
+        }
+        resetBoardFromPuzzle();
       });
-      canvas.addEventListener('pointermove', (event) => {
-        storeTouchPointer(event);
-        if (ENABLE_TOUCH_PINCH_ZOOM && pinchState.active) {
-          updatePinchZoom();
-          if (event.cancelable) {
-            event.preventDefault();
+
+      noteBtn.addEventListener("click", () => {
+        if (game.status !== "playing") {
+          return;
+        }
+        game.noteMode = !game.noteMode;
+        renderControls();
+      });
+
+      eraseBtn.addEventListener("click", eraseSelection);
+      hintBtn.addEventListener("click", useHint);
+      undoBtn.addEventListener("click", undoMove);
+      redoBtn.addEventListener("click", redoMove);
+
+      clearSelectBtn.addEventListener("click", () => {
+        if (game.status === "playing") {
+          clearSelection();
+        }
+      });
+
+      playAgainBtn.addEventListener("click", () => {
+        if (game.puzzle.length) {
+          resetBoardFromPuzzle();
+        }
+      });
+
+      nextPuzzleBtn.addEventListener("click", startNewGame);
+
+      document.addEventListener("keydown", (event) => {
+        const tag = (event.target && event.target.tagName) || "";
+        if (tag === "INPUT" || tag === "TEXTAREA") {
+          return;
+        }
+
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+          event.preventDefault();
+          if (event.shiftKey) {
+            redoMove();
+          } else {
+            undoMove();
           }
           return;
         }
-        moveCanvasDrag(event);
-      });
-      canvas.addEventListener('pointerup', (event) => {
-        const wasPinching = ENABLE_TOUCH_PINCH_ZOOM && pinchState.active;
-        removeTouchPointer(event);
-        if (ENABLE_TOUCH_PINCH_ZOOM && pinchState.active && touchPointers.size < 2) {
-          handoffPinchToSingleFingerDrag();
-        } else if (!ENABLE_TOUCH_PINCH_ZOOM && touchPointers.size < 2) {
-          pinchState.active = false;
-        }
-        if (wasPinching) {
-          endCanvasDrag(event, false);
-          return;
-        }
-        endCanvasDrag(event, true);
-      });
-      canvas.addEventListener('pointercancel', (event) => {
-        const wasPinching = ENABLE_TOUCH_PINCH_ZOOM && pinchState.active;
-        removeTouchPointer(event);
-        if (ENABLE_TOUCH_PINCH_ZOOM && pinchState.active && touchPointers.size < 2) {
-          handoffPinchToSingleFingerDrag();
-        } else if (touchPointers.size < 2) {
-          pinchState.active = false;
-        }
-        if (wasPinching) {
-          endCanvasDrag(event, false);
-          return;
-        }
-        endCanvasDrag(event, false);
-      });
-      canvas.addEventListener('pointerleave', () => {
-        if (!dragState.active) {
-          state.hoverCell = null;
-        }
-      });
-      canvas.addEventListener('wheel', (event) => {
-        if (ui.gameScreen.classList.contains('hidden')) {
-          return;
-        }
-        if (event.cancelable) {
+
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
           event.preventDefault();
-        }
-        const delta = event.deltaY < 0 ? CAMERA_ZOOM_STEP : -CAMERA_ZOOM_STEP;
-        setCameraZoom(cameraZoom + delta, event.clientX, event.clientY);
-      }, { passive: false });
-
-      bindButtonSfx(ui.clearSelectionBtn);
-      bindButtonSfx(ui.startGameBtn);
-      bindButtonSfx(ui.skipPrepBtn);
-      bindButtonSfx(ui.zoomOutBtn);
-      bindButtonSfx(ui.zoomInBtn);
-      bindButtonSfx(ui.upgradeBtn);
-      bindButtonSfx(ui.sellBtn);
-      bindButtonSfx(ui.restartBtn);
-      for (let i = 0; i < ui.speedButtons.length; i += 1) {
-        bindButtonSfx(ui.speedButtons[i]);
-      }
-
-      ui.clearSelectionBtn.addEventListener('click', () => {
-        selectedPool.clear();
-        selectedMapId = MAP_CATALOG[0].id;
-        setActiveMap(selectedMapId);
-        renderMapSelection();
-        renderCharacterSelection();
-      });
-
-      ui.startGameBtn.addEventListener('click', () => {
-        beginGame();
-      });
-
-      ui.skipPrepBtn.addEventListener('click', () => {
-        if (state.phase === 'prep') {
-          startNextWave();
+          redoMove();
           return;
         }
-        if (canSkipCurrentWave()) {
-          const fromWave = state.wave;
-          startNextWave();
-          showNotice('Skipped wave ' + fromWave + ' to wave ' + state.wave + '.');
+
+        if (game.status !== "playing") {
+          return;
+        }
+
+        if (/^[1-9]$/.test(event.key)) {
+          event.preventDefault();
+          handleNumberInput(Number(event.key));
+          return;
+        }
+
+        if (event.code.startsWith("Numpad")) {
+          const n = Number(event.code.replace("Numpad", ""));
+          if (n >= 1 && n <= 9) {
+            event.preventDefault();
+            handleNumberInput(n);
+            return;
+          }
+        }
+
+        if (event.key === "Backspace" || event.key === "Delete" || event.key === "0") {
+          event.preventDefault();
+          eraseSelection();
+          return;
+        }
+
+        switch (event.key.toLowerCase()) {
+          case "n":
+            event.preventDefault();
+            game.noteMode = !game.noteMode;
+            renderControls();
+            break;
+          case "h":
+            event.preventDefault();
+            useHint();
+            break;
+          case "escape":
+            event.preventDefault();
+            clearSelection();
+            break;
+          case "arrowup":
+            event.preventDefault();
+            moveSelection(-1, 0);
+            break;
+          case "arrowdown":
+            event.preventDefault();
+            moveSelection(1, 0);
+            break;
+          case "arrowleft":
+            event.preventDefault();
+            moveSelection(0, -1);
+            break;
+          case "arrowright":
+            event.preventDefault();
+            moveSelection(0, 1);
+            break;
+          default:
+            break;
         }
       });
 
-      ui.zoomOutBtn.addEventListener('click', () => {
-        setCameraZoom(cameraZoom - CAMERA_ZOOM_STEP);
+      window.addEventListener("resize", queueViewportFit);
+      window.addEventListener("orientationchange", () => {
+        setTimeout(queueViewportFit, 120);
+        setTimeout(queueViewportFit, 280);
+      });
+      window.addEventListener("load", () => {
+        queueViewportFit();
+        setTimeout(queueViewportFit, 120);
+        setTimeout(queueViewportFit, 300);
       });
 
-      ui.zoomInBtn.addEventListener('click', () => {
-        setCameraZoom(cameraZoom + CAMERA_ZOOM_STEP);
-      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", queueViewportFit);
+        window.visualViewport.addEventListener("scroll", queueViewportFit);
+      }
+    }
 
-      for (let i = 0; i < ui.speedButtons.length; i += 1) {
-        const button = ui.speedButtons[i];
-        button.addEventListener('click', () => {
-          const speed = Number(button.dataset.speed || '1');
-          setGameSpeed(speed);
+    function init() {
+      buildCellUI();
+      buildNumberPad();
+      buildDifficultyBar();
+      bindEvents();
+      renderStats();
+      renderControls();
+      queueViewportFit();
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+          queueViewportFit();
+          setTimeout(queueViewportFit, 120);
         });
       }
 
-      window.addEventListener('resize', () => {
-        resizeArenaCanvas();
-      });
+      if ("ResizeObserver" in window && !fitObserver) {
+        fitObserver = new ResizeObserver(() => {
+          queueViewportFit();
+        });
+        fitObserver.observe(appShellEl);
+      }
 
-      ui.upgradeBtn.addEventListener('click', () => {
-        upgradeSelectedTower();
-      });
+      startNewGame();
+    }
 
-      ui.sellBtn.addEventListener('click', () => {
-        sellSelectedTower();
-      });
-
-      ui.restartBtn.addEventListener('click', () => {
-        resetToSelection();
-      });
-
-      setActiveMap(selectedMapId);
-      renderProfileBar();
-      renderMapSelection();
-      renderCharacterSelection();
-      renderSpeedButtons();
-      renderZoomControls();
-      ui.towerLimitNote.textContent = 'Defender Limit Total: ' + MAX_TOTAL_TOWERS;
-      renderTowerInfo();
-      updateHud();
-      requestAnimationFrame(gameLoop);
-    })();
+    init();
   </script>
 </body>
- </html>
+</html>
