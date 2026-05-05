@@ -476,6 +476,65 @@
       line-height: 1.5;
     }
 
+    .menu-overlay {
+      z-index: 26;
+      background: rgba(8, 24, 35, 0.36);
+      backdrop-filter: blur(8px);
+    }
+
+    .menu-card {
+      width: min(460px, 94vw);
+      background: rgba(255, 252, 245, 0.95);
+      border: 1px solid #e6d6bd;
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 24px 44px rgba(8, 24, 35, 0.32);
+    }
+
+    .menu-card h2 {
+      margin: 0 0 8px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.55rem, 4vw, 2rem);
+      color: #183346;
+    }
+
+    .menu-card p {
+      margin: 0 0 12px;
+      color: #4f6672;
+      font-size: 0.9rem;
+    }
+
+    .menu-difficulty {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .menu-difficulty button {
+      border: 1px solid #d3dde1;
+      background: #fbfdfe;
+      color: #223a49;
+      border-radius: 10px;
+      padding: 10px 8px;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .menu-difficulty button.active {
+      background: linear-gradient(140deg, #fff6e1, #f7e5bf);
+      border-color: #e2b468;
+      color: #6f4908;
+    }
+
+    .menu-play-btn {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1rem;
+    }
+
     .overlay-actions {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -810,6 +869,15 @@
     </div>
   </div>
 
+  <div class="overlay menu-overlay" id="menuOverlay" aria-live="polite">
+    <div class="menu-card">
+      <h2>Sudoku Studio</h2>
+      <p>Choose a difficulty, then hit Play.</p>
+      <div class="menu-difficulty" id="menuDifficulty"></div>
+      <button class="btn btn-primary menu-play-btn" id="menuPlayBtn" type="button">Play</button>
+    </div>
+  </div>
+
   <div class="overlay hidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
     <div class="overlay-card">
       <div class="spinner" aria-hidden="true"></div>
@@ -860,6 +928,9 @@
 
     const loadingOverlay = document.getElementById("loadingOverlay");
     const loadingText = document.getElementById("loadingText");
+    const menuOverlay = document.getElementById("menuOverlay");
+    const menuDifficultyEl = document.getElementById("menuDifficulty");
+    const menuPlayBtn = document.getElementById("menuPlayBtn");
 
     const resultOverlay = document.getElementById("resultOverlay");
     const resultTitle = document.getElementById("resultTitle");
@@ -888,7 +959,7 @@
       timerStart: 0,
       history: [],
       future: [],
-      status: "idle",
+      status: "menu",
       wrongCells: new Set(),
       flashInvalid: new Set(),
       bestTimes: loadBestTimes()
@@ -1002,6 +1073,10 @@
           }
           game.difficulty = key;
           renderDifficultyBar();
+          if (!menuOverlay.classList.contains("hidden")) {
+            renderMenuDifficulty();
+            return;
+          }
           startNewGame();
         });
         difficultyBarEl.appendChild(btn);
@@ -1009,11 +1084,49 @@
       renderDifficultyBar();
     }
 
+    function buildMenuDifficulty() {
+      menuDifficultyEl.innerHTML = "";
+      Object.entries(DIFFICULTIES).forEach(([key, value]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.diff = key;
+        btn.textContent = value.label;
+        btn.addEventListener("click", () => {
+          game.difficulty = key;
+          renderDifficultyBar();
+          renderMenuDifficulty();
+        });
+        menuDifficultyEl.appendChild(btn);
+      });
+      renderMenuDifficulty();
+    }
+
     function renderDifficultyBar() {
       const buttons = difficultyBarEl.querySelectorAll("button");
       buttons.forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.diff === game.difficulty);
       });
+    }
+
+    function renderMenuDifficulty() {
+      const buttons = menuDifficultyEl.querySelectorAll("button");
+      buttons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.diff === game.difficulty);
+      });
+    }
+
+    function showMainMenu() {
+      clearTimer();
+      game.status = "menu";
+      menuOverlay.classList.remove("hidden");
+      renderControls();
+      renderDifficultyBar();
+      renderMenuDifficulty();
+      queueViewportFit();
+    }
+
+    function hideMainMenu() {
+      menuOverlay.classList.add("hidden");
     }
 
     function clearTimer() {
@@ -1256,6 +1369,7 @@
 
     function renderAll() {
       renderDifficultyBar();
+      renderMenuDifficulty();
       renderStats();
       renderBoard();
       renderControls();
@@ -1731,6 +1845,10 @@
     }
 
     async function startNewGame() {
+      if (game.status === "generating") {
+        return;
+      }
+
       const config = DIFFICULTIES[game.difficulty];
       game.status = "generating";
       renderControls();
@@ -1767,6 +1885,10 @@
 
     function bindEvents() {
       newGameBtn.addEventListener("click", startNewGame);
+      menuPlayBtn.addEventListener("click", () => {
+        hideMainMenu();
+        startNewGame();
+      });
 
       restartBtn.addEventListener("click", () => {
         if (!game.puzzle.length) {
@@ -1905,6 +2027,7 @@
       buildCellUI();
       buildNumberPad();
       buildDifficultyBar();
+      buildMenuDifficulty();
       bindEvents();
       renderStats();
       renderControls();
@@ -1924,7 +2047,7 @@
         fitObserver.observe(appShellEl);
       }
 
-      startNewGame();
+      showMainMenu();
     }
 
     init();
