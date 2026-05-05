@@ -959,6 +959,7 @@
       elapsed: 0,
       timerId: null,
       timerStart: 0,
+      hintLocked: new Set(),
       history: [],
       future: [],
       status: "menu",
@@ -1198,21 +1199,43 @@
         noteMode: game.noteMode,
         mistakes: game.mistakes,
         hintsUsed: game.hintsUsed,
+        hintLocked: Array.from(game.hintLocked),
         wrongCells: Array.from(game.wrongCells),
         elapsed: game.elapsed
       };
     }
 
     function restoreState(state, options = {}) {
-      const { preserveMistakeCount = false } = options;
+      const {
+        preserveMistakeCount = false,
+        preserveHintCount = false,
+        preserveHintLocks = false
+      } = options;
       const currentMistakes = game.mistakes;
+      const currentHintsUsed = game.hintsUsed;
+      const currentHintLocked = new Set(game.hintLocked);
       game.board = cloneBoard(state.board);
       game.notes = state.notes.map((list) => new Set(list));
       game.selected = state.selected ? { ...state.selected } : null;
       game.noteMode = state.noteMode;
       game.mistakes = preserveMistakeCount ? Math.max(currentMistakes, state.mistakes) : state.mistakes;
-      game.hintsUsed = state.hintsUsed;
+      game.hintsUsed = preserveHintCount ? Math.max(currentHintsUsed, state.hintsUsed) : state.hintsUsed;
+      game.hintLocked = new Set(state.hintLocked || []);
+      if (preserveHintLocks) {
+        for (const idx of currentHintLocked) {
+          game.hintLocked.add(idx);
+        }
+      }
       game.wrongCells = new Set(state.wrongCells || []);
+
+      for (const idx of game.hintLocked) {
+        const r = Math.floor(idx / 9);
+        const c = idx % 9;
+        game.board[r][c] = game.solution[r][c];
+        game.notes[idx].clear();
+        game.wrongCells.delete(idx);
+      }
+
       game.elapsed = state.elapsed;
       game.timerStart = Date.now() - game.elapsed * 1000;
       renderAll();
@@ -1232,7 +1255,11 @@
       }
       game.future.push(snapshot());
       const prev = game.history.pop();
-      restoreState(prev, { preserveMistakeCount: true });
+      restoreState(prev, {
+        preserveMistakeCount: true,
+        preserveHintCount: true,
+        preserveHintLocks: true
+      });
     }
 
     function redoMove() {
@@ -1241,7 +1268,11 @@
       }
       game.history.push(snapshot());
       const next = game.future.pop();
-      restoreState(next, { preserveMistakeCount: true });
+      restoreState(next, {
+        preserveMistakeCount: true,
+        preserveHintCount: true,
+        preserveHintLocks: true
+      });
     }
 
     function renderStats() {
@@ -1447,7 +1478,7 @@
       const { r, c } = game.selected;
       const idx = r * 9 + c;
 
-      if (game.fixed.has(idx)) {
+      if (game.fixed.has(idx) || game.hintLocked.has(idx)) {
         return;
       }
 
@@ -1503,7 +1534,7 @@
 
       const { r, c } = game.selected;
       const idx = r * 9 + c;
-      if (game.fixed.has(idx)) {
+      if (game.fixed.has(idx) || game.hintLocked.has(idx)) {
         return;
       }
 
@@ -1564,6 +1595,7 @@
       game.board[target.r][target.c] = game.solution[target.r][target.c];
       game.wrongCells.delete(idx);
       game.notes[idx].clear();
+      game.hintLocked.add(idx);
       clearPeerNotes(target.r, target.c, game.solution[target.r][target.c]);
       game.selected = { ...target };
       game.hintsUsed += 1;
@@ -1835,6 +1867,7 @@
       game.noteMode = false;
       game.mistakes = 0;
       game.hintsUsed = 0;
+      game.hintLocked.clear();
       game.elapsed = 0;
       game.history.length = 0;
       game.future.length = 0;
