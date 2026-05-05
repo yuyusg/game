@@ -416,6 +416,22 @@
       background: #eef7fa;
     }
 
+    .number-pad button.complete-digit {
+      background: #e0e6eb;
+      color: #7b8791;
+      border-color: #c4ced6;
+      cursor: not-allowed;
+      opacity: 1;
+    }
+
+    .number-pad button.complete-digit:hover,
+    .number-pad button.complete-digit:disabled {
+      background: #e0e6eb;
+      color: #7b8791;
+      border-color: #c4ced6;
+      opacity: 1;
+    }
+
     .hint {
       margin: 3px 0 0;
       font-size: 0.82rem;
@@ -852,6 +868,7 @@
     const nextPuzzleBtn = document.getElementById("nextPuzzleBtn");
 
     const cellElements = [];
+    const numberPadButtons = new Map();
 
     const game = {
       difficulty: "medium",
@@ -960,12 +977,15 @@
 
     function buildNumberPad() {
       numberPadEl.innerHTML = "";
+      numberPadButtons.clear();
       for (let n = 1; n <= 9; n += 1) {
         const btn = document.createElement("button");
         btn.type = "button";
+        btn.dataset.num = String(n);
         btn.textContent = String(n);
         btn.addEventListener("click", () => handleNumberInput(n));
         numberPadEl.appendChild(btn);
+        numberPadButtons.set(n, btn);
       }
     }
 
@@ -1117,6 +1137,29 @@
       bestValueEl.textContent = typeof best === "number" ? formatTime(best) : "--:--";
     }
 
+    function getCorrectCountForDigit(digit) {
+      if (!Array.isArray(game.board) || !Array.isArray(game.solution) || game.board.length < 9 || game.solution.length < 9) {
+        return 0;
+      }
+
+      let count = 0;
+      for (let r = 0; r < 9; r += 1) {
+        if (!Array.isArray(game.board[r]) || !Array.isArray(game.solution[r])) {
+          continue;
+        }
+        for (let c = 0; c < 9; c += 1) {
+          if (game.board[r][c] === digit && game.solution[r][c] === digit) {
+            count += 1;
+          }
+        }
+      }
+      return count;
+    }
+
+    function isDigitComplete(digit) {
+      return getCorrectCountForDigit(digit) >= 9;
+    }
+
     function renderControls() {
       noteBtn.textContent = `Notes: ${game.noteMode ? "On" : "Off"}`;
       noteBtn.classList.toggle("toggle-active", game.noteMode);
@@ -1131,9 +1174,15 @@
       redoBtn.disabled = !canPlay || game.future.length === 0;
       clearSelectBtn.disabled = !canPlay;
 
-      numberPadEl.querySelectorAll("button").forEach((btn) => {
-        btn.disabled = !canPlay;
-      });
+      for (let digit = 1; digit <= 9; digit += 1) {
+        const btn = numberPadButtons.get(digit);
+        if (!btn) {
+          continue;
+        }
+        const completed = isDigitComplete(digit);
+        btn.classList.toggle("complete-digit", completed);
+        btn.disabled = !canPlay || completed;
+      }
     }
 
     function isPeer(a, b) {
@@ -1299,6 +1348,14 @@
       }
 
       if (game.board[r][c] === value) {
+        pushHistory();
+        game.board[r][c] = 0;
+        game.wrongCells.delete(idx);
+        renderAll();
+        return;
+      }
+
+      if (isDigitComplete(value)) {
         return;
       }
 
